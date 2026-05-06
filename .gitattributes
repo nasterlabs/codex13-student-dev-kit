@@ -1,0 +1,65 @@
+# Default: normalize text to LF in the repository and working tree.
+* text=auto eol=lf
+
+# Source and project metadata.
+*.sh    text eol=lf
+*.cpp   text eol=lf
+*.c     text eol=lf
+*.h     text eol=lf
+*.hpp   text eol=lf
+*.php   text eol=lf
+*.js    text eol=lf
+*.cjs   text eol=lf
+*.yml   text eol=lf
+*.yaml  text eol=lf
+*.json  text eol=lf
+*.svg   text eol=lf
+*.md    text eol=lf
+*.mdc   text eol=lf
+*.txt   text eol=lf
+*.ini   text eol=lf
+
+# Windows scripts and NSIS files.
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+*.cmd   text eol=crlf
+*.bat   text eol=crlf
+*.nsi   text eol=crlf
+*.nsh   text eol=crlf
+
+# This file contains Polish UI strings and must remain valid UTF-8 for
+# makensis.exe /INPUTCHARSET UTF8. tools/scripts/check-repo.ps1 enforces this.
+apps/setup/src/nsis/Codex13StudentDevKit.nsi text eol=crlf
+
+# Windows project files, if the native plugin project is regenerated.
+*.sln      text eol=crlf
+*.vcxproj  text eol=crlf
+*.filters  text eol=crlf
+*.props    text eol=crlf
+*.targets  text eol=crlf
+*.rc       text eol=crlf
+
+# RTF pages are ANSI/codepage-sensitive installer assets.
+*.rtf   binary
+
+# Binary and generated artifacts.
+*.dll   binary
+*.exe   binary
+*.bmp   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.ico   binary
+*.pfx   binary
+*.p12   binary
+*.zip   binary
+*.7z    binary
+*.chm   binary
+*.obj   binary
+*.lib   binary
+*.exp   binary
+*.pdb   binary
+*.res   binary
+*.iobj  binary
+*.ipdb  binary

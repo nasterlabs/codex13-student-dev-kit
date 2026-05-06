@@ -1,0 +1,5 @@
+# Commands run from the XAMPP root after patching and setup_xampp.bat.
+# Empty lines and lines starting with # are ignored.
+# Each validation must exit with code 0.
+.\php\php.exe -n .\install\verify-xampp-paths.php 2>&1
+.\apache\bin\httpd.exe -t 2>&1

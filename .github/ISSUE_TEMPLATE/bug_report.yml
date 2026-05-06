@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible problem
+title: "fix: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Installer version
+      description: Version shown in the installer title bar, tag, or commit hash.
+    validations:
+      required: true
+  - type: input
+    id: windows_version
+    attributes:
+      label: Windows version
+      description: "Settings → System → About → OS build (e.g. Windows 11 23H2, build 22631)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: preinstalled
+    attributes:
+      label: Software already present before running the installer
+      description: Check anything that was installed on the system before you ran Codex 13 Setup.
+      options:
+        - label: VS Code was already installed system-wide
+        - label: XAMPP was already installed
+        - label: Git was already installed system-wide
+        - label: A previous version of Codex 13 Student Dev Kit was installed
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant logs after removing personal data (paths, usernames).
+      render: text

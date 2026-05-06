@@ -1,0 +1,104 @@
+﻿XAMPP for Windows - License Information
+========================================
+
+Codex 13 Student Dev Kit downloads the official Apache Friends portable package:
+
+  xampp-portable-windows-x64-8.2.12-0-VS16.zip
+
+Source URL configured in Setup:
+
+  https://downloads.sourceforge.net/project/xampp/XAMPP%20Windows/8.2.12/xampp-portable-windows-x64-8.2.12-0-VS16.zip
+
+XAMPP is a free, open source, cross-platform web server package developed and
+distributed by Apache Friends (https://www.apachefriends.org/).
+
+XAMPP bundles many independent open source components. Each component is
+governed by its own license terms; XAMPP should not be described as having a
+single license. The 8.2.12 Windows portable archive includes a full upstream
+license tree at:
+
+  xampp\licenses\
+
+After installation by Codex 13 Student Dev Kit, that upstream license tree is
+available under:
+
+  tools\xampp\licenses\
+
+Important included top-level component license files include:
+
+  tools\xampp\apache\LICENSE.txt
+  tools\xampp\apache\NOTICE.txt
+  tools\xampp\php\license.txt
+  tools\xampp\phpMyAdmin\LICENSE
+  tools\xampp\tomcat\LICENSE
+  tools\xampp\tomcat\NOTICE
+
+Main components announced by Apache Friends for XAMPP Windows 8.2.12 include:
+
+  PHP 8.2.12
+  Apache HTTP Server 2.4.58
+  MariaDB 10.4.32
+  phpMyAdmin 5.2.1
+  OpenSSL 3.1.3
+  curl 8.4.0_6
+  Tomcat 8.5.96
+
+Common high-level license families in the bundle include:
+
+  Apache HTTP Server         Apache License 2.0
+  MariaDB                    GNU General Public License v2
+  PHP                        PHP License 3.01
+  phpMyAdmin                 GNU General Public License v2
+  OpenSSL                    Apache License 2.0 (since OpenSSL 3.x)
+  Perl                       Artistic License 1.0 / GNU GPL v1 or later
+  Tomcat                     Apache License 2.0
+
+The GNU General Public License version 2 governs several components in the
+bundle. The full text of the GPL v2 is available at:
+
+  https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
+The full text of the Apache License 2.0 is available at:
+
+  https://www.apache.org/licenses/LICENSE-2.0
+
+The full text of the PHP License 3.01 is available at:
+
+  https://www.php.net/license/3_01.txt
+
+For complete license information for each bundled component, use the
+`tools\xampp\licenses\` tree from the installed XAMPP package and the XAMPP
+documentation:
+
+  https://www.apachefriends.org/faq_windows.html
+  https://www.apachefriends.org/blog/new_xampp_20231119.html
+
+XAMPP is downloaded and installed by the Codex 13 Student Dev Kit installer
+from its official source. The Codex 13 Student Dev Kit does not modify the
+XAMPP binaries; only the XAMPP path-configuration scripts are patched for
+portable operation. See the Codex 13 SDK repository for details on those
+patches.
+
+Codex 13 XAMPP patch scripts
+----------------------------
+
+The installer overlays a small source patch set onto XAMPP's path-configuration
+scripts. The patch set is maintained in the Codex 13 Student Dev Kit source
+repository under:
+
+  apps/setup/src/patches/xampp/
+
+The upstream-derived `install.php` patch and accompanying repair, verification
+and diagnostic helpers are distributed as GPL-2.0-only. The full corresponding
+source is in the repository, and installer builds also install those PHP files as
+source text under:
+
+  tools\xampp\install\
+
+The repository license notice for the patch set is:
+
+  LICENSES/LicenseRef-xampp-patch.txt
+
+GPL-2.0-only text:
+
+  LICENSES/GPL-2.0-only.txt

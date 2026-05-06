@@ -1,0 +1,7 @@
+{
+  "name": "@nasterlabs/nsis-naster-archive",
+  "version": "0.1.0",
+  "description": "NSIS plugin providing in-process 7-zip archive extraction for the Codex 13 installer.",
+  "license": "MIT",
+  "private": true
+}

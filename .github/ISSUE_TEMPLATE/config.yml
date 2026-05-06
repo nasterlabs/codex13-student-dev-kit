@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Security vulnerability report
+    url: https://github.com/nasterlabs/codex13-student-dev-kit/security/advisories/new
+    about: Please report security vulnerabilities privately. Do not open public issues for security reports.
+
+  - name: Questions and support
+    url: https://github.com/nasterlabs/codex13-student-dev-kit/discussions
+    about: Ask usage questions, discuss setup problems, and propose ideas.
+
+  - name: Codex 13 Student Dev Kit product page
+    url: https://codex13.dev/student-dev-kit
+    about: Product information, documentation, and release notes.

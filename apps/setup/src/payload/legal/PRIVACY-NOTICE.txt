@@ -1,0 +1,18 @@
+Codex 13 Student Dev Kit - Privacy Notice
+
+The Codex 13 Student Dev Kit Installer does not require user accounts
+and does not process personal data.
+
+It may:
+- download files from the Internet
+- store local installation logs
+- store diagnostic information (paths, errors, versions)
+- store a local installation manifest containing the absolute install path and log path
+
+This data is not transmitted to Luczak Consulting P.S.A.
+
+Contact:
+support@naster.dev
+
+Trust Center:
+https://codex13.dev/pl/zasady/

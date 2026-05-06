@@ -1,0 +1,39 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Codex 13 Student Dev Kit
+Source: https://github.com/nasterlabs/codex13-student-dev-kit
+
+Files: *
+Copyright: 2026 Naster Labs, the software brand of Luczak Consulting P.S.A.
+License: Apache-2.0
+
+Files:
+ apps/setup/vendor/plugins/**
+ apps/setup/vendor/tools/7zip/**
+ apps/setup/src/payload/licenses/**
+ vendor/**
+Copyright: NOASSERTION
+License: LicenseRef-third-party-vendored
+
+Files:
+ packages/nsis-naster-archive/**
+Copyright: 2026 Naster Labs, the software brand of Luczak Consulting P.S.A.
+License: MIT
+
+Files:
+ packages/nsis-naster-archive/src/nsis-plugin-api/**
+Copyright: 1999-2026 Contributors
+License: Zlib
+
+Files: NOTICE
+Copyright: 2026 Naster Labs, the software brand of Luczak Consulting P.S.A.
+License: Apache-2.0
+
+Files:
+ apps/setup/src/patches/xampp/**
+Copyright: 2005 Kay Vogelgesang and Carsten Wiedmann for Apache Friends
+           2026 Naster Labs, the software brand of Luczak Consulting P.S.A.
+License: GPL-2.0-only
+Comment:
+ LICENSES/LicenseRef-xampp-patch.txt documents the upstream provenance,
+ patch scope, modification notices, and why this patch set is treated as
+ GPL-2.0-only.

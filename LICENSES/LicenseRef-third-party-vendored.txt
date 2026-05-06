@@ -1,0 +1,4 @@
+Vendored third-party components are included for installer build and packaging
+purposes. They remain governed by their own license terms.
+
+See docs/third-party.md and apps/setup/src/payload/legal/THIRD-PARTY-NOTICES.txt.

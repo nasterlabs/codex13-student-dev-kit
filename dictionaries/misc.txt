@@ -1,0 +1,12 @@
+# Catch-all for words that pass review but aren't project or tech terms.
+# Add here anything cspell flags that is genuinely correct English.
+hardcoded
+Licence
+organisation
+presetem
+Pelne
+softwareowym
+stacki
+wlasnym
+wysyla
+bledow

@@ -1,0 +1,61 @@
+{
+  "version": "0.2",
+  "language": "en,pl",
+  "import": ["@cspell/dict-pl_pl/cspell-ext.json"],
+  "files": [
+    "**/*.md",
+    "**/*.txt",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.json",
+    "**/*.ps1",
+    "apps/setup/src/nsis/i18n/*.nsh",
+    "apps/setup/src/nsis/pages/terms-pl.rtf"
+  ],
+  "dictionaryDefinitions": [
+    {
+      "name": "c13-project",
+      "path": "./dictionaries/project.txt",
+      "addWords": true
+    },
+    {
+      "name": "c13-tech",
+      "path": "./dictionaries/tech.txt",
+      "addWords": true
+    },
+    {
+      "name": "c13-misc",
+      "path": "./dictionaries/misc.txt",
+      "addWords": true
+    }
+  ],
+  "dictionaries": ["c13-project", "c13-tech", "c13-misc"],
+  "ignorePaths": [
+    "node_modules/**",
+    ".build/**",
+    "dist/**",
+    "AUDIT.md",
+    "TASKS.md",
+    "CHANGELOG.md",
+    "pnpm-lock.yaml"
+  ],
+  "overrides": [
+    {
+      "filename": "**/i18n/*.nsh",
+      "ignoreRegExpList": [
+        "\\$\\{[^}]+\\}",
+        "\\$[A-Za-z_][A-Za-z0-9_]*",
+        "C13_[A-Z_]+"
+      ]
+    },
+    {
+      "filename": "**/*.rtf",
+      "ignoreRegExpList": [
+        "\\\\[a-zA-Z]+-?\\d* ?",
+        "\\\\'[0-9a-fA-F]{2}",
+        "\\{\\\\[^}]+\\}",
+        "\\{\\*[^}]+\\}"
+      ]
+    }
+  ]
+}

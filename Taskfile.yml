@@ -1,0 +1,167 @@
+version: "3"
+
+includes:
+  nsis-naster-archive:
+    taskfile: ./packages/nsis-naster-archive/Taskfile.yml
+    dir: ./packages/nsis-naster-archive
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+
+  setup:
+    desc: Initialize local development environment
+    platforms: [windows]
+    cmds:
+      - task: deps
+      - pnpm exec lefthook install
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/setup-local.ps1
+
+  deps:
+    desc: Install JavaScript development dependencies with pnpm
+    cmds:
+      - pnpm install
+
+  build:
+    desc: Build the installer (reads .env)
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./apps/setup/scripts/build.ps1
+
+  build:dev:
+    desc: Build the dev installer (requires .env.dev)
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./apps/setup/scripts/build.ps1 -EnvFile .env.dev
+
+  build:prod:
+    desc: Build the release installer (requires .env.prod)
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./apps/setup/scripts/build.ps1 -EnvFile .env.prod
+
+  build:release:
+    desc: Alias for build:prod (backward compatibility)
+    platforms: [windows]
+    cmds:
+      - task: build:prod
+
+  build:nsis-naster-archive:
+    desc: Build and copy the Naster Archive NSIS plugin
+    platforms: [windows]
+    cmds:
+      - task: nsis-naster-archive:build
+
+  build:plugin:
+    desc: Alias for build:nsis-naster-archive (backward compatibility)
+    platforms: [windows]
+    cmds:
+      - task: build:nsis-naster-archive
+
+  build:assets:
+    desc: "Regenerate NSIS bitmap and icon assets from SVG sources (requires bash in PATH — Git Bash or WSL)"
+    platforms: [windows]
+    sources:
+      - assets/brand/codex13-signet-digital.svg
+      - assets/brand/codex13-favicon.svg
+      - tools/scripts/build-nsis-assets.sh
+    generates:
+      - apps/setup/assets/nsis/codex13-favicon.ico
+      - apps/setup/assets/nsis/codex13.ico
+      - apps/setup/assets/nsis/codex13-header.bmp
+      - apps/setup/assets/nsis/codex13-wizard.bmp
+    cmds:
+      - bash ./tools/scripts/build-nsis-assets.sh
+
+  signing:dev-cert:
+    desc: Generate and trust a local self-signed code signing certificate
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/dev/setup-dev-cert.ps1
+
+  clean:
+    desc: Remove ignored local build output (.build, dist, native bin/obj)
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -LiteralPath .build,dist,packages/nsis-naster-archive/bin,packages/nsis-naster-archive/obj -Recurse -Force -ErrorAction SilentlyContinue"
+
+  lint:
+    desc: Lint PowerShell scripts with PSScriptAnalyzer
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/lint-ps.ps1
+
+  check:repo:
+    desc: Run repository source/index checks
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-repo.ps1
+
+  check:editorconfig:
+    desc: Check EditorConfig compliance (requires pnpm install)
+    cmds:
+      - pnpm run check:editorconfig
+
+  check:md:
+    desc: Lint Markdown files with markdownlint-cli2 (requires pnpm install)
+    cmds:
+      - pnpm run check:md
+
+  check:spelling:
+    desc: Spell-check Markdown files with cspell (requires pnpm install)
+    cmds:
+      - pnpm run check:spelling
+
+  check:
+    desc: Run all non-installing checks
+    platforms: [windows]
+    deps:
+      - check:repo
+      - lint
+      - check:editorconfig
+      - check:md
+      - check:spelling
+
+  doctor:
+    desc: Check that all required dev tools are installed and configured
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/doctor.ps1
+
+  format:ps:
+    desc: Auto-format PowerShell scripts with Invoke-Formatter
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/format-ps.ps1
+
+  verify:package:
+    desc: Verify an archive; pass CLI_ARGS="-ArchivePath path -ExpectedSha256 hash"
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./apps/setup/src/installer-scripts/verify-package.ps1 {{.CLI_ARGS}}
+
+  verify-vendor:
+    desc: Verify vendored setup binaries against committed SHA256 checksums
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/verify-vendor.ps1
+
+  commit:check:
+    desc: Validate conventional commit messages in a range; pass CLI_ARGS="-From main -To HEAD"
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-conventional-commits.ps1 {{.CLI_ARGS}}
+
+  dco:check:
+    desc: Validate DCO sign-offs in a range; pass CLI_ARGS="-From main -To HEAD"
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-dco.ps1 {{.CLI_ARGS}}
+
+  reset-installer-language:
+    desc: "Dev utility: remove InstallerLanguage registry value so the language dialog appears again on next installer run (HKCU\\Software\\NasterLabs\\Codex13SDK)"
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Remove-ItemProperty -Path 'HKCU:\Software\NasterLabs\Codex13SDK' -Name 'InstallerLanguage' -ErrorAction SilentlyContinue"

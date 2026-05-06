@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: Codex 13 Student Dev Kit
+message: >-
+  If you use this software in academic or research work, please cite it using
+  the metadata in this file.
+type: software
+authors:
+  - family-names: Łuczak
+    given-names: Łukasz Piotr
+    alias: lukaszpiotrluczak
+    affiliation: Luczak Consulting P.S.A.
+repository-code: 'https://github.com/nasterlabs/codex13-student-dev-kit'
+url: 'https://codex13.dev/student-dev-kit'
+abstract: >-
+  Codex 13 Student Dev Kit is a Windows installer that sets up a portable
+  development environment for students in a user-selected folder without
+  requiring administrator rights. It supports bilingual installation (Polish
+  and English), multiple profiles (Start, Classroom), and portable installs
+  of VS Code, Git for Windows, and XAMPP.
+keywords:
+  - windows
+  - installer
+  - development-environment
+  - students
+  - portable
+  - nsis
+  - education
+license: Apache-2.0
+version: 0.7.0-alpha.0
+date-released: '2026-05-04'

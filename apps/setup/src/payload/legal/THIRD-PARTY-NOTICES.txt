@@ -1,0 +1,20 @@
+﻿Third-Party Software Notices
+
+This product may include or download third-party software components.
+License texts for downloaded components are in the licenses\ directory.
+
+This software may include or download third-party components.
+Each component is subject to its own license. License texts for components
+installed by Codex 13 Student Dev Kit are in the licenses\ directory.
+
+Components downloaded and installed by the installer:
+- Microsoft Visual Studio Code   licenses\vscode\LICENSE.txt    (Microsoft Software License Terms; notices in licenses\vscode\NOTICE.txt)
+- Git for Windows                licenses\git\LICENSE.txt       (Git: GPL v2; bundle also includes compatible and separately licensed components)
+- XAMPP                          licenses\xampp\LICENSES.txt    (multi-component bundle; full upstream licenses in tools\xampp\licenses after installation)
+- OpenSSH for Windows            licenses\openssh\LICENSE.txt   (ISC/BSD-family; notices in licenses\openssh\NOTICE.txt)
+- Codex 13 XAMPP patch scripts   licenses\xampp\LICENSES.txt    (GPL-2.0-only patch set; source PHP files installed under tools\xampp\install)
+
+Installer build-time/runtime helper notices:
+- NSIS LoadRTF header             zlib/libpng license
+- NSIS INetC plugin               zlib/libpng license
+- 7-Zip Extra                     7za.exe: LGPL-2.1-or-later with BSD-3-Clause and BSD-2-Clause code; see apps/setup/vendor/tools/7zip/License.txt

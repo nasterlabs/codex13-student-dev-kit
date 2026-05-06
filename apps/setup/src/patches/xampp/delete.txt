@@ -1,0 +1,6 @@
+# Paths relative to the XAMPP root removed before applying the Codex 13 patch overlay.
+# Empty lines and lines starting with # are ignored.
+#
+# These are legacy source/export artifacts from earlier patch iterations. The
+# installer ships the final runtime names from root/install/ instead.
+install/install.sys

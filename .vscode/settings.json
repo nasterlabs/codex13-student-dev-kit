@@ -1,0 +1,24 @@
+{
+  "nsis.compiler.customArguments": [
+    "-X!addplugindir ${workspaceFolder}/apps/setup/vendor/plugins/x86-unicode"
+  ],
+  "nsis.showOutputView": "Always",
+  "files.encoding": "utf8",
+  "files.eol": "\n",
+  "files.associations": {
+    "*.nsh": "nsis",
+    "*.nsi": "nsis",
+    "*.rc": "rc",
+    "*.vcxproj": "xml",
+    "*.props": "xml",
+    "*.targets": "xml"
+  },
+  "C_Cpp.default.intelliSenseMode": "windows-msvc-x86",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.default.cStandard": "c17",
+  "C_Cpp.errorSquiggles": "disabled",
+    "todo-tree.filtering.excludeGlobs": [
+    "**/packages/nsis-naster-archive/src/nsis-plugin-api/**"
+  ],
+  "cSpell.enableFiletypes": ["nsis"]
+}

@@ -1,0 +1,51 @@
+XAMPP patch set license notice
+==============================
+
+Files under apps/setup/src/patches/xampp/ are source files used to patch the
+XAMPP for Windows portable package distributed by Apache Friends:
+
+  https://www.apachefriends.org/
+
+The upstream file apps/setup/src/patches/xampp/root/install/install.original.php
+is copied from:
+
+  xampp-portable-windows-x64-8.2.12-0-VS16.zip
+  xampp/install/install.php
+
+The upstream script notice identifies "Installer PHP 1.5" by Kay Vogelgesang
+and Carsten Wiedmann for Apache Friends, 2005. The file itself does not include
+a dedicated SPDX identifier or per-file license header. The Apache Friends
+project listing on SourceForge declares XAMPP under GNU General Public License
+version 2.0 (GPLv2), and Apache Friends describes the XAMPP compilation as
+distributed under the GNU General Public Licence while individual bundled
+components keep their own licenses.
+
+For this repository, the XAMPP patch set is treated as:
+
+  GPL-2.0-only
+
+Modified upstream-derived file:
+
+  apps/setup/src/patches/xampp/root/install/install.php
+
+Related helper scripts distributed under the same GPL-2.0-only terms for
+license compatibility and simplicity:
+
+  apps/setup/src/patches/xampp/root/install/repair-xampp-paths.php
+  apps/setup/src/patches/xampp/root/install/verify-xampp-paths.php
+
+Modifications were made by Naster Labs, the software brand of Luczak Consulting
+P.S.A., for Codex 13 Student Dev Kit. Codex 13 changes in the modified upstream
+script are marked with comments such as:
+
+  [CODEX13-SDK PATCH START]
+  [CODEX13-SDK PATCH END]
+
+A copy of GPL-2.0-only is provided in:
+
+  LICENSES/GPL-2.0-only.txt
+
+The complete corresponding source for this patch set is present in the
+repository under apps/setup/src/patches/xampp/. Installer builds also install
+the PHP patch files as source text under tools\xampp\install\.
+

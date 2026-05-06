@@ -1,0 +1,13 @@
+# Project brand names, proper nouns, and identifiers specific to Codex 13.
+Codex
+codex
+Naster
+nasterlabs
+Luczak
+Łuczak
+Łukasz
+lukaszpiotrluczak
+NasterLabs
+Vogelgesang
+Wiedmann
+apachefriends

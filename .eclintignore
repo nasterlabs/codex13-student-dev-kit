@@ -1,0 +1,17 @@
+apps/setup/vendor/**
+apps/setup/assets/**
+assets/**
+node_modules/**
+.build/**
+dist/**
+pnpm-lock.yaml
+*.md
+**/*.md
+*.txt
+**/*.txt
+LICENSE
+**/LICENSE
+NOTICE
+**/NOTICE
+LICENSES/**
+.reuse/dep5

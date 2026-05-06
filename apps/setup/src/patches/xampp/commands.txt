@@ -1,0 +1,4 @@
+# Commands run from the XAMPP root after applying the Codex 13 patch overlay.
+# Empty lines and lines starting with # are ignored.
+# Each command must exit with code 0.
+.\php\php.exe -n .\install\repair-xampp-paths.php 2>&1

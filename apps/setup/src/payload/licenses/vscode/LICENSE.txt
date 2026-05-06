@@ -1,0 +1,26 @@
+Visual Studio Code 1.118.1 - License Information
+=================================================
+
+Codex 13 Student Dev Kit downloads the official Microsoft Visual Studio Code
+Windows x64 archive from:
+
+  https://update.code.visualstudio.com/1.118.1/win32-x64-archive/stable
+
+The Visual Studio Code product is licensed under the Microsoft Software License
+Terms for Microsoft Visual Studio Code, not under the MIT license. The source
+code for the open source Code - OSS project is available from Microsoft under
+the MIT license, but that is not the complete license for the official
+Microsoft-branded binary downloaded by this installer.
+
+The exact English product license file from the downloaded 1.118.1 archive is
+included next to this file as:
+
+  LICENSE.rtf
+
+Third-party notices from the same downloaded archive are included as:
+
+  NOTICE.txt
+
+Official license page:
+
+  https://code.visualstudio.com/license

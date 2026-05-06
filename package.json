@@ -1,0 +1,32 @@
+{
+  "name": "@nasterlabs/codex13-student-dev-kit",
+  "version": "0.7.0-alpha.0",
+  "private": true,
+  "description": "Windows NSIS installer for Codex 13 Student Dev Kit.",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": "24.15.0",
+    "pnpm": "10.33.2"
+  },
+  "volta": {
+    "node": "24.15.0",
+    "pnpm": "10.33.2"
+  },
+  "scripts": {
+    "commitlint": "commitlint --from main --to HEAD",
+    "commitlint:range": "commitlint",
+    "check:editorconfig": "node tools/scripts/check-editorconfig.cjs",
+    "check:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "check:spelling": "cspell lint --no-progress README.md AGENTS.md CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md SUPPORT.md CITATION.cff docs/**/*.md packages/**/*.md apps/setup/vendor/README.md apps/setup/src/nsis/i18n/*.nsh apps/setup/src/nsis/pages/terms-pl.rtf apps/setup/src/patches/xampp/root/install/README-xampp-unicode-patch.md .github/**/*.yml Taskfile.yml package.json"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@evilmartians/lefthook": "^1.11.14",
+    "@cspell/dict-pl_pl": "^3.0.6",
+    "cspell": "^8.17.5",
+    "eclint": "^2.8.1",
+    "markdownlint-cli2": "^0.18.1"
+  }
+}

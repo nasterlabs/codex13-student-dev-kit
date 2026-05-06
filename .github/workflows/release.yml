@@ -1,0 +1,267 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*" # any semver tag; version is validated in the Configure environment step
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Test build version, e.g. 0.7.0-alpha.1. Leave empty to use 0.7.0-alpha.<run_number>."
+        required: false
+        default: ""
+      publish_release:
+        description: "Publish GitHub Release"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "draft"
+      enable_signing:
+        description: "Allow production signing for this manual run if RELEASE_SIGNING_ENABLED=1 and secrets are configured."
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Pre-release checks
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Task
+        if: ${{ env.ACT != 'true' }}
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+
+      - name: Setup pnpm
+        if: ${{ env.ACT != 'true' }}
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node
+        if: ${{ env.ACT != 'true' }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+
+      - name: Install dependencies
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify vendored binaries
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: ./scripts/verify-vendor.ps1
+
+      - name: Run checks
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: task check
+
+  release:
+    name: Build release
+    runs-on: windows-latest
+    needs: check
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install Task
+        if: ${{ env.ACT != 'true' }}
+        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+
+      - name: Cache NSIS
+        if: ${{ env.ACT != 'true' }}
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .build\nsis
+          key: nsis-3.12-${{ runner.os }}
+
+      - name: Install NSIS
+        if: ${{ env.ACT != 'true' }}
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: |
+          ./tools/scripts/setup-nsis.ps1
+
+      - name: Configure environment
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: |
+          $nsis = $env:NSIS_PATH
+          if ([string]::IsNullOrWhiteSpace($nsis)) {
+            foreach ($envFile in @(".env.prod", ".env")) {
+              if (-not (Test-Path -LiteralPath $envFile -PathType Leaf)) {
+                continue
+              }
+
+              $nsisLine = Get-Content -LiteralPath $envFile |
+                Where-Object { $_ -match '^NSIS_PATH=' } |
+                Select-Object -First 1
+              if ($nsisLine) {
+                $nsis = ($nsisLine -split '=', 2)[1].Trim()
+                break
+              }
+            }
+          }
+
+          if ([string]::IsNullOrWhiteSpace($nsis)) {
+            throw "NSIS_PATH was not set by setup-nsis.ps1."
+          }
+
+          $isTagRelease = $env:GITHUB_REF -like "refs/tags/v*"
+          $manualVersion = "${{ github.event.inputs.version }}"
+          $manualPublishRelease = "${{ github.event.inputs.publish_release }}"
+          $manualEnableSigning = "${{ github.event.inputs.enable_signing }}"
+          $repoReleaseSigningEnabled = "${{ vars.RELEASE_SIGNING_ENABLED }}"
+
+          if ($isTagRelease) {
+            $buildVersion = $env:GITHUB_REF_NAME -replace '^v', ''
+            $releaseTagName = $env:GITHUB_REF_NAME
+          } elseif (-not [string]::IsNullOrWhiteSpace($manualVersion)) {
+            $buildVersion = $manualVersion
+            $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
+          } else {
+            $buildVersion = "0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
+            $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
+          }
+
+          $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          if ($buildVersion -notmatch $semverPattern) {
+            throw "Tag or workflow input must produce a valid semver BUILD_VERSION. Actual: $buildVersion"
+          }
+
+          $isPrerelease = $buildVersion.Contains("-")
+          $publishGithubRelease = $isTagRelease -or ($manualPublishRelease -eq "draft")
+          $isDraftRelease = (-not $isTagRelease) -and ($manualPublishRelease -eq "draft")
+
+          $enableProductionSigning =
+            ($repoReleaseSigningEnabled -eq "1") -and
+            ($isTagRelease -or ($manualEnableSigning -eq "true"))
+
+          "NSIS_PATH=$nsis" | Set-Content -LiteralPath .env -Encoding ASCII
+          "BUILD_CHANNEL=release" | Add-Content -LiteralPath .env -Encoding ASCII
+          "BUILD_VERSION=$buildVersion" | Add-Content -LiteralPath .env -Encoding ASCII
+          "SIGNING_ENABLED=0" | Add-Content -LiteralPath .env -Encoding ASCII
+
+          "NSIS_PATH=$nsis" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "BUILD_CHANNEL=release" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "BUILD_VERSION=$buildVersion" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "SIGNING_ENABLED=0" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "RELEASE_TAG_NAME=$releaseTagName" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "IS_TAG_RELEASE=$isTagRelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "IS_PRERELEASE=$isPrerelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "PUBLISH_GITHUB_RELEASE=$publishGithubRelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "IS_DRAFT_RELEASE=$isDraftRelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "ENABLE_PRODUCTION_SIGNING=$enableProductionSigning" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+
+      - name: Configure production signing
+        if: ${{ env.ENABLE_PRODUCTION_SIGNING == 'True' }}
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        env:
+          RELEASE_SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          RELEASE_SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+          RELEASE_SIGN_TIMESTAMP_URL: ${{ secrets.SIGN_TIMESTAMP_URL }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGN_PFX_BASE64)) {
+            throw "ENABLE_PRODUCTION_SIGNING=True, but SIGN_PFX_BASE64 is not configured."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGN_PFX_PASSWORD)) {
+            throw "ENABLE_PRODUCTION_SIGNING=True, but SIGN_PFX_PASSWORD is not configured."
+          }
+
+          $certBytes = [Convert]::FromBase64String($env:RELEASE_SIGN_PFX_BASE64)
+          $securePwd = ConvertTo-SecureString -String $env:RELEASE_SIGN_PFX_PASSWORD -AsPlainText -Force
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(
+            $certBytes, $securePwd,
+            ([System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::UserKeySet -bor
+              [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+          )
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('My', 'CurrentUser')
+          $store.Open('ReadWrite')
+          $store.Add($cert)
+          $store.Close()
+
+          $envLines = Get-Content -LiteralPath .env
+          $envLines = $envLines -replace '^SIGNING_ENABLED=0$', 'SIGNING_ENABLED=1'
+          $envLines | Set-Content -LiteralPath .env -Encoding ASCII
+          "SIGNING_ENABLED=1" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          "SIGN_CERT_THUMBPRINT=$($cert.Thumbprint)" | Add-Content -LiteralPath .env -Encoding ASCII
+          "SIGN_CERT_THUMBPRINT=$($cert.Thumbprint)" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+
+          if (-not [string]::IsNullOrWhiteSpace($env:RELEASE_SIGN_TIMESTAMP_URL)) {
+            "SIGN_TIMESTAMP_URL=$env:RELEASE_SIGN_TIMESTAMP_URL" | Add-Content -LiteralPath .env -Encoding ASCII
+            "SIGN_TIMESTAMP_URL=$env:RELEASE_SIGN_TIMESTAMP_URL" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
+          }
+
+      - name: Build NSIS plugin
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: task build:nsis-naster-archive
+
+      - name: Build release installer
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: task build
+
+      - name: Generate checksums
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: |
+          $assetName = "Codex13SDK-Setup-win-x64-$env:BUILD_VERSION.exe"
+          $assetPath = Join-Path "dist\setup" $assetName
+          Move-Item -LiteralPath "dist\setup\Codex13SDK-Setup.exe" -Destination $assetPath -Force
+          Get-FileHash -Algorithm SHA256 $assetPath |
+            ForEach-Object { "$($_.Hash.ToLower())  $assetName" } |
+            Set-Content -LiteralPath "$assetPath.sha256" -Encoding ASCII
+
+      - name: Generate release manifest
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: |
+          ./tools/scripts/write-release-manifest.ps1 `
+            -BuildVersion $env:BUILD_VERSION `
+            -ReleaseNotesPath dist/setup/Codex13SDK.release-notes.md
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Codex13SDK-Setup-${{ env.BUILD_VERSION }}
+          path: |
+            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
+            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
+            dist/setup/Codex13SDK.release-notes.md
+            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+          if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: ${{ env.PUBLISH_GITHUB_RELEASE == 'True' }}
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG_NAME }}
+          name: Codex 13 Student Dev Kit ${{ env.BUILD_VERSION }}
+          body_path: dist/setup/Codex13SDK.release-notes.md
+          draft: ${{ env.IS_DRAFT_RELEASE == 'True' }}
+          prerelease: ${{ env.IS_PRERELEASE == 'True' }}
+          make_latest: false
+          files: |
+            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
+            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
+            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+          generate_release_notes: false

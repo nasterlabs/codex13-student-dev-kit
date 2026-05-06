@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="512" height="512"><svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="codex13-core" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0" stop-color="#00D9FF"></stop>
+      <stop offset="1" stop-color="#6366F1"></stop>
+    </linearGradient>
+  </defs>
+  <g transform="matrix(0.76, 0, 0, 0.76, 12, 12)">
+    <rect x="0" y="0" width="100" height="100" rx="18" fill="url(#codex13-core)"></rect>
+    <g fill="url(#b)" transform="matrix(0.441177, 0, 0, 0.566783, -176.764771, -163.678391)">
+      <path d="M 567.6 352 L 590.6 352 C 586.6 360 580.6 367 575.6 374 C 580.6 377 586.6 381 589.6 386 C 593.6 392 595.6 400 595.6 407 C 595.6 417 591.6 426 584.6 433 C 577.6 440 567.6 445 557.6 447 L 537.6 448 L 523.6 447 C 512.6 444 502.6 441 493.6 434 L 503.6 413 C 516.6 420 530.6 426 545.6 425 C 552.6 424 560.6 422 565.6 416 C 569.6 411 569.6 403 566.6 397 C 563.6 393 558.6 391 553.6 390 C 543.6 387 533.6 388 521.6 388 L 521.6 365 L 547.6 365 C 555.6 365 559.6 352 567.6 352 Z" style="fill: rgb(255, 255, 255);"></path>
+      <path d="M 497.68 312 L 575.68 312 C 571.68 320 565.68 327 560.68 335 L 497.68 335 L 497.68 312 Z" style="fill: rgb(255, 255, 255);"></path>
+      <path d="M 428.961 312.073 L 480.961 312.073 L 480.961 335.073 L 428.961 335.073 L 428.961 312.073 Z" style="fill: rgb(255, 255, 255); stroke-width: 0.504;"></path>
+      <path d="M 453.933 350.923 L 480.933 350.923 L 480.933 444.923 L 453.933 444.923 L 453.933 350.923 Z" style="fill: rgb(255, 255, 255); stroke-width: 1;"></path>
+    </g>
+  </g>
+</svg></svg><style>@media (prefers-color-scheme: light) { :root { filter: none; } }
+@media (prefers-color-scheme: dark) { :root { filter: none; } }
+</style></svg>

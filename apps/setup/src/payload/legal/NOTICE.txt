@@ -1,0 +1,12 @@
+Codex 13 Student Dev Kit
+Copyright © 2026 Naster Labs, the software brand of Luczak Consulting P.S.A.
+
+Codex 13 Student Dev Kit is developed by Naster Labs, the software brand
+of Luczak Consulting P.S.A., as part of the Codex 13 educational project.
+
+Codex 13 is a brand used by Luczak Consulting P.S.A.
+Naster Labs is the software brand of Luczak Consulting P.S.A.
+
+This distribution may download, install, and configure third-party software.
+Such software remains the property of its respective authors and is governed
+by separate license terms.

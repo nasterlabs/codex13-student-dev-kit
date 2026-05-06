@@ -1,0 +1,7 @@
+commit-msg:
+  commands:
+    commitlint:
+      run: pnpm exec commitlint --edit {1}
+    dco:
+      run: >-
+        node -e "const fs=require('fs');const m=fs.readFileSync(process.argv[1],'utf8');if(!m.split('\n').some(l=>/^Signed-off-by: .+ <[^>]+>/.test(l))){console.error('ERROR: Missing DCO Signed-off-by trailer.\nFix: git commit -s --amend');process.exit(1)}" {1}

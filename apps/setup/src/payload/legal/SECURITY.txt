@@ -1,0 +1,8 @@
+Security Policy
+
+If you have discovered a security vulnerability in Codex 13 Student Dev Kit,
+please report it to:
+
+security@naster.dev
+
+Please do not disclose vulnerabilities publicly before they are resolved.

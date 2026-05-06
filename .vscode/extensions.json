@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "idleberg.nsis",
+        "ms-vscode.powershell",
+        "ms-vscode.cpptools",
+        "spmeesseman.vscode-taskexplorer",
+        "gruntfuggly.todo-tree",
+        "streetsidesoftware.code-spell-checker"
+    ]
+}
