@@ -49,6 +49,8 @@ jobs:
       - name: Install Task
         if: ${{ env.ACT != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          repo-token: ${{ github.token }}
 
       - name: Setup pnpm
         if: ${{ env.ACT != 'true' }}
@@ -89,6 +91,8 @@ jobs:
       - name: Install Task
         if: ${{ env.ACT != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        with:
+          repo-token: ${{ github.token }}
 
       - name: Cache NSIS
         if: ${{ env.ACT != 'true' }}
