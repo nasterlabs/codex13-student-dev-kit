@@ -251,7 +251,7 @@ jobs:
 
       - name: Publish GitHub Release
         if: ${{ env.PUBLISH_GITHUB_RELEASE == 'True' }}
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: ${{ env.RELEASE_TAG_NAME }}
           name: Codex 13 Student Dev Kit ${{ env.BUILD_VERSION }}
