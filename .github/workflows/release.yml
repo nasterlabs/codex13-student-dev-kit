@@ -69,6 +69,10 @@ jobs:
         shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
         run: pnpm install --frozen-lockfile
 
+      - name: Check lockfile was not modified
+        shell: bash
+        run: git diff --exit-code -- pnpm-lock.yaml package.json
+
       - name: Verify vendored binaries
         shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
         run: ./scripts/verify-vendor.ps1

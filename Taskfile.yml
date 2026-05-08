@@ -109,6 +109,11 @@ tasks:
     cmds:
       - pnpm run check:md
 
+  check:yaml:
+    desc: Parse and validate YAML files (requires pnpm install)
+    cmds:
+      - pnpm run check:yaml
+
   check:spelling:
     desc: Spell-check Markdown files with cspell (requires pnpm install)
     cmds:
@@ -122,6 +127,7 @@ tasks:
       - lint
       - check:editorconfig
       - check:md
+      - check:yaml
       - check:spelling
 
   doctor:

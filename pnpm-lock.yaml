@@ -29,6 +29,9 @@ importers:
       markdownlint-cli2:
         specifier: ^0.18.1
         version: 0.18.1
+      yaml:
+        specifier: ^2.8.4
+        version: 2.8.4
 
   packages/nsis-naster-archive: {}
 

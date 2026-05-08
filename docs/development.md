@@ -39,10 +39,10 @@ NSIS_PATH=C:\Tools\nsis\makensis.exe
 **Named env files** — for switching between dev and prod builds without editing
 `.env`, copy the matching template and fill in your paths:
 
-| Template           | Copy to      | Used by        |
-|--------------------|--------------|----------------|
-| `.env.dev.example` | `.env.dev`   | `task build:dev`  |
-| `.env.prod.example`| `.env.prod`  | `task build:prod` |
+| Template | Copy to | Used by |
+| --- | --- | --- |
+| `.env.dev.example` | `.env.dev` | `task build:dev` |
+| `.env.prod.example` | `.env.prod` | `task build:prod` |
 
 Named build tasks pass their env file explicitly. If that file is missing, the
 build fails instead of silently falling back to `.env`. You can also select a
@@ -100,7 +100,7 @@ All variables read by `apps/setup/scripts/build.ps1`. Variables already in the
 process environment take precedence over any env file.
 
 | Variable | Required | Default | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `NSIS_PATH` | Yes | — | Path to `makensis.exe`. |
 | `BUILD_CHANNEL` | No | `dev` | Output channel: `dev` or `release`. Controls the output file name. |
 | `BUILD_VERSION` | No | derived from `config.nsh` | Full SemVer string. Core must match `APP_VERSION` in `config.nsh`. |

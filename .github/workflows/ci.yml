@@ -37,6 +37,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Check lockfile was not modified
+        shell: bash
+        run: git diff --exit-code -- pnpm-lock.yaml package.json
+
       - name: Verify vendored binaries
         shell: pwsh
         run: ./scripts/verify-vendor.ps1
@@ -78,6 +82,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check lockfile was not modified
+        shell: bash
+        run: git diff --exit-code -- pnpm-lock.yaml package.json
 
       - name: Validate PR commits
         run: pnpm exec commitlint --from "origin/${{ github.base_ref }}" --to "origin/pr/${{ github.event.pull_request.number }}"

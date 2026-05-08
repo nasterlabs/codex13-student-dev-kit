@@ -43,7 +43,7 @@ ServerRoot must be a valid directory
 ## Files
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `install.php` | Replacement for `xampp/install/install.php`. Keeps path relocation inside PHP instead of using `awk.exe`. |
 | `install.original.php` | Copy of the upstream XAMPP installer script kept beside the replacement for traceability. |
 | `repair-xampp-paths.php` | Repair utility for already damaged XAMPP configuration files. |
@@ -93,7 +93,7 @@ The patch manifest files in `apps/setup/src/patches/xampp/` drive the runtime
 pipeline:
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | `delete.txt` | Removes legacy patch export files such as `install.codex13-unicode.php` before overlaying the final files. |
 | `commands.txt` | Runs the repair helper from the XAMPP root after the overlay. |
 | `validations.txt` | Runs `verify-xampp-paths.php` and `httpd.exe -t` after `setup_xampp.bat`. |
