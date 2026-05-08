@@ -18,8 +18,8 @@ importers:
         specifier: ^3.0.6
         version: 3.0.6
       '@evilmartians/lefthook':
-        specifier: ^1.11.14
-        version: 1.13.6
+        specifier: ^2.1.6
+        version: 2.1.6
       cspell:
         specifier: ^8.17.5
         version: 8.19.4
@@ -345,8 +345,8 @@ packages:
     resolution: {integrity: sha512-Pa474iBxS+lxsAL4XkETPGIq3EgMLCEb9agj3hAd2VGMTCApaiUvamR4b+uGXIPybN70piFxvzrfoxsG2uIP6A==}
     engines: {node: '>=18.0'}
 
-  '@evilmartians/lefthook@1.13.6':
-    resolution: {integrity: sha512-79vplrUBWL4Fkt59YkEBdSpqBVhNrY8t5+jEp+wX5QbsmbQLcSULqwS7FmbNRyECa2LWMrUWpe6ENIfNwB4jiw==}
+  '@evilmartians/lefthook@2.1.6':
+    resolution: {integrity: sha512-ysZbzryf74wlISmgm0PH/n1lJ0HD7AHmI6DoJgWO9qzIETQknhGdmKbkOi0MjLYtiOHWQl8Dr2qwg0ksDpNZjA==}
     cpu: [x64, arm64, ia32]
     os: [darwin, linux, win32]
     hasBin: true
@@ -2243,7 +2243,7 @@ snapshots:
 
   '@cspell/url@8.19.4': {}
 
-  '@evilmartians/lefthook@1.13.6': {}
+  '@evilmartians/lefthook@2.1.6': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
