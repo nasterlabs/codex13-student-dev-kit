@@ -220,6 +220,14 @@ jobs:
             "SIGN_TIMESTAMP_URL=$env:RELEASE_SIGN_TIMESTAMP_URL" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
           }
 
+      - name: Update release metadata
+        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        run: |
+          ./tools/scripts/update-release-metadata.ps1 `
+            -BuildVersion $env:BUILD_VERSION `
+            -Commit $env:GITHUB_SHA `
+            -ReleaseUrl "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/$env:RELEASE_TAG_NAME"
+
       - name: Build NSIS plugin
         shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
         run: task build:nsis-naster-archive

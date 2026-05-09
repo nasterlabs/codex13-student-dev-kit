@@ -84,3 +84,11 @@ nopatch
 MariaDB
 signtool
 thumbprint
+
+orcid
+ORCID
+Zenodo
+zenodo
+CodeMeta
+codemeta
+funder

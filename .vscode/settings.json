@@ -17,8 +17,15 @@
   "C_Cpp.default.cppStandard": "c++17",
   "C_Cpp.default.cStandard": "c17",
   "C_Cpp.errorSquiggles": "disabled",
-    "todo-tree.filtering.excludeGlobs": [
+  "todo-tree.filtering.excludeGlobs": [
     "**/packages/nsis-naster-archive/src/nsis-plugin-api/**"
   ],
-  "cSpell.enableFiletypes": ["nsis"]
+  "cSpell.enabledFileTypes": {
+    "nsis": true
+  },
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/citation-file-format/citation-file-format/main/schema.json": [
+      "CITATION.cff"
+    ]
+  }
 }

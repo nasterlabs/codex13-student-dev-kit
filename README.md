@@ -6,13 +6,41 @@
 
 by Naster Labs, the software brand of Luczak Consulting P.S.A.
 
-Codex 13 Student Dev Kit sets up a portable development environment for students in a user-selected folder. The first public alpha installs portable VS Code, and in the classroom profile also portable Git and XAMPP, without requiring administrator rights when the target folder is writable.
+Codex 13 Student Dev Kit sets up a portable development environment toolkit
+for students, classrooms, workshops and project-based learning in a
+user-selected folder. The first public alpha installs portable VS Code, and in
+the classroom profile also portable Git and XAMPP, without requiring
+administrator rights when the target folder is writable.
+
+## What Is This?
+
+Codex 13 Student Dev Kit helps prepare clean, repeatable development
+environments for learning, workshops, classrooms and small projects.
+
+The current alpha focuses on Setup: a Windows installer that installs selected
+portable tools into one user-writable directory and starts them through Codex 13
+launchers.
+
+The broader roadmap includes:
+
+- Setup - installation, reinstall/update and uninstall.
+- Launcher - starting tools with a controlled per-process environment.
+- Manager - ongoing environment management, profiles, presets, repairs,
+  project workflows and classroom operations.
+
+## Current And Planned Scope
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| Setup | Alpha | Installs portable VS Code, Git and XAMPP depending on profile. |
+| Launcher | Alpha/basic | Starts tools without modifying global system PATH. |
+| Manager | Planned | Environment management, repairs, workflows and project presets. |
+| WSL / Docker / Podman | Planned | Future integration for more advanced development setups. |
+| Dev Containers | Planned | Future support for project-based container workflows. |
 
 All tools are unpacked under the installation directory and are started through Codex 13 launchers. The launchers set environment variables only for the started process, so multiple independent Dev Kit installations can coexist on one computer.
 
 Setup is portable-first, not trace-free. It installs the tool payload under the selected installation directory, but it also creates per-user integration needed for a normal Windows installer: HKCU registry entries, an uninstall entry, Start Menu and optional desktop shortcuts, logs, legal files and `codex13-sdk.manifest.json`.
-
-This repository contains the **Setup** (this installer). The future **Manager** will handle ongoing environment management: workflows, projects, resets, plugins, classroom operations.
 
 ![Installer welcome page](docs/screenshots/installer-welcome.png)
 
@@ -52,7 +80,7 @@ Development/build:
 - Visual Studio Build Tools with C++ tools and Windows SDK when rebuilding the
   NSIS Naster Archive plug-in.
 
-## Quick Start For Students
+## Quick Start
 
 1. Download `Codex13SDK-Setup-win-x64-<version>.exe` from the
    [latest release](https://github.com/nasterlabs/codex13-student-dev-kit/releases/latest).

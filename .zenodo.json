@@ -1,0 +1,23 @@
+{
+  "title": "Codex 13 Student Dev Kit",
+  "upload_type": "software",
+  "description": "Portable development environment toolkit for students, classrooms, workshops and project-based learning.",
+  "creators": [
+    {
+      "name": "Łuczak, Łukasz Piotr",
+      "orcid": "0000-0003-0892-7276",
+      "affiliation": "Luczak Consulting P.S.A."
+    }
+  ],
+  "license": "Apache-2.0",
+  "keywords": [
+    "education",
+    "developer-tools",
+    "portable",
+    "windows",
+    "dev-environment",
+    "classroom",
+    "workshop"
+  ],
+  "version": "0.7.0-alpha.0"
+}

@@ -48,6 +48,12 @@ tasks:
     cmds:
       - task: build:prod
 
+  release:metadata:
+    desc: Update citation/archive metadata; pass CLI_ARGS="-BuildVersion 0.7.0-alpha.1"
+    platforms: [windows]
+    cmds:
+      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/update-release-metadata.ps1 {{.CLI_ARGS}}
+
   build:nsis-naster-archive:
     desc: Build and copy the Naster Archive NSIS plugin
     platforms: [windows]

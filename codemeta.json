@@ -1,0 +1,124 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "Codex 13 Student Dev Kit",
+  "alternateName": [
+    "C13 SDK",
+    "Codex13 Student Dev Kit"
+  ],
+  "description": "Codex 13 Student Dev Kit is a Windows-based portable development environment toolkit for students, classrooms, workshops and project-based learning. It automates installation and configuration of portable developer tools without requiring administrator privileges.",
+  "license": "https://spdx.org/licenses/Apache-2.0.html",
+  "codeRepository": "https://github.com/nasterlabs/codex13-student-dev-kit",
+  "url": "https://codex13.dev/student-dev-kit",
+  "issueTracker": "https://github.com/nasterlabs/codex13-student-dev-kit/issues",
+  "downloadUrl": "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.0",
+  "developmentStatus": "active",
+  "version": "0.7.0-alpha.0",
+  "datePublished": "2026-05-04",
+  "keywords": [
+    "education",
+    "developer-tools",
+    "portable-development-environment",
+    "windows",
+    "classroom",
+    "student",
+    "portable-applications",
+    "visual-studio-code",
+    "xampp",
+    "git-for-windows",
+    "devcontainer",
+    "docker",
+    "podman",
+    "wsl",
+    "workshop",
+    "teaching"
+  ],
+  "programmingLanguage": [
+    {
+      "@type": "ComputerLanguage",
+      "name": "C++"
+    },
+    {
+      "@type": "ComputerLanguage",
+      "name": "NSIS"
+    },
+    {
+      "@type": "ComputerLanguage",
+      "name": "PowerShell"
+    },
+    {
+      "@type": "ComputerLanguage",
+      "name": "PHP"
+    },
+    {
+      "@type": "ComputerLanguage",
+      "name": "JavaScript"
+    }
+  ],
+  "runtimePlatform": [
+    "Windows 10",
+    "Windows 11"
+  ],
+  "operatingSystem": [
+    "Windows"
+  ],
+  "applicationCategory": "DeveloperApplication",
+  "softwareRequirements": [
+    "Windows 10 or newer"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Łukasz Piotr",
+      "familyName": "Łuczak",
+      "email": "lukasz.luczak@naster.dev",
+      "identifier": "https://orcid.org/0000-0003-0892-7276",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Luczak Consulting P.S.A."
+      }
+    }
+  ],
+  "maintainer": {
+    "@type": "Person",
+    "givenName": "Łukasz Piotr",
+    "familyName": "Łuczak",
+    "email": "lukasz.luczak@naster.dev",
+    "identifier": "https://orcid.org/0000-0003-0892-7276"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Naster Labs",
+    "url": "https://naster.dev"
+  },
+  "producer": {
+    "@type": "Organization",
+    "name": "Luczak Consulting P.S.A.",
+    "url": "https://luczak.consulting"
+  },
+  "funder": {
+    "@type": "Organization",
+    "name": "Codex 13"
+  },
+  "isAccessibleForFree": true,
+  "isPartOf": {
+    "@type": "Project",
+    "name": "Codex 13"
+  },
+  "audience": [
+    {
+      "@type": "Audience",
+      "audienceType": "Students"
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Teachers"
+    },
+    {
+      "@type": "Audience",
+      "audienceType": "Workshop participants"
+    }
+  ],
+  "releaseNotes": "Release metadata for Codex 13 Student Dev Kit 0.7.0-alpha.0. See the GitHub Release for installer artifacts, checksums, manifest and changelog.",
+  "readme": "https://github.com/nasterlabs/codex13-student-dev-kit#readme"
+}

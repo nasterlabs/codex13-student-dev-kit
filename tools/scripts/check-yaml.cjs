@@ -4,7 +4,7 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const YAML = require('yaml');
 
-const files = execFileSync('git', ['ls-files', '--', '*.yml', '*.yaml'], {
+const files = execFileSync('git', ['ls-files', '--', '*.yml', '*.yaml', 'CITATION.cff'], {
   encoding: 'utf8',
 })
   .split(/\r?\n/)
@@ -14,6 +14,12 @@ let hasErrors = false;
 
 for (const file of files) {
   const source = fs.readFileSync(file, 'utf8');
+  if (/[�]|(?:Ĺ|Å)/u.test(source)) {
+    hasErrors = true;
+    console.error(`${file}:?:? EncodingError: file contains likely mojibake`);
+    continue;
+  }
+
   const document = YAML.parseDocument(source, {
     prettyErrors: true,
     strict: true,

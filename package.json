@@ -18,7 +18,7 @@
     "commitlint:range": "commitlint",
     "check:editorconfig": "node tools/scripts/check-editorconfig.cjs",
     "check:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.build\"",
-    "check:spelling": "cspell lint --no-progress README.md AGENTS.md CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md SUPPORT.md CITATION.cff docs/**/*.md packages/**/*.md apps/setup/vendor/README.md apps/setup/src/nsis/i18n/*.nsh apps/setup/src/nsis/pages/terms-pl.rtf apps/setup/src/patches/xampp/root/install/README-xampp-unicode-patch.md .github/**/*.yml Taskfile.yml package.json",
+    "check:spelling": "cspell lint --no-progress README.md AGENTS.md CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md SUPPORT.md CITATION.cff codemeta.json .zenodo.json docs/**/*.md packages/**/*.md apps/setup/vendor/README.md apps/setup/src/nsis/i18n/*.nsh apps/setup/src/nsis/pages/terms-pl.rtf apps/setup/src/patches/xampp/root/install/README-xampp-unicode-patch.md .github/**/*.yml Taskfile.yml package.json",
     "check:yaml": "node tools/scripts/check-yaml.cjs"
   },
   "devDependencies": {

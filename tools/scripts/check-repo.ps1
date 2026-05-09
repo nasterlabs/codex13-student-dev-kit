@@ -259,6 +259,7 @@ function Assert-NoTrackedPath {
 $requiredFiles = @(
   "AGENTS.md",
   "CHANGELOG.md",
+  "CITATION.cff",
   "CODE_OF_CONDUCT.md",
   "CONTRIBUTING.md",
   "LICENSE",
@@ -272,6 +273,7 @@ $requiredFiles = @(
   ".gitattributes",
   ".gitignore",
   ".npmrc",
+  ".zenodo.json",
   ".reuse/dep5",
   ".github/CODEOWNERS",
   ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -284,6 +286,7 @@ $requiredFiles = @(
   "AGENTS.md",
   "CLAUDE.md",
   "commitlint.config.cjs",
+  "codemeta.json",
   "LICENSES/Apache-2.0.txt",
   "LICENSES/GPL-2.0-only.txt",
   "LICENSES/LicenseRef-third-party-vendored.txt",
@@ -335,6 +338,7 @@ $requiredFiles = @(
   "packages/nsis-naster-archive/src/nasterarchive.vcxproj.filters",
   "packages/nsis-naster-archive/src/resource.h",
   "tools/scripts/check-dco.ps1",
+  "tools/scripts/update-release-metadata.ps1",
   "tools/scripts/write-release-manifest.ps1"
 )
 
