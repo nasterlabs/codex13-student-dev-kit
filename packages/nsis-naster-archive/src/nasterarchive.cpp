@@ -346,46 +346,51 @@ bool ParseOptions(Options *options, std::wstring *error)
     args.push_back(arg);
   }
 
-  for (size_t i = 0; i < args.size(); ++i) {
+  auto readOptionValue = [&args, error](size_t *index, const wchar_t *optionName, std::wstring *value) -> bool {
+    size_t valueIndex = *index + 1;
+    if (valueIndex >= args.size()) {
+      *error = L"Missing value for ";
+      *error += optionName;
+      *error += L".";
+      return false;
+    }
+
+    *value = args[valueIndex];
+    *index = valueIndex;
+    return true;
+  };
+
+  size_t i = 0;
+  while (i < args.size()) {
     const std::wstring &arg = args[i];
     if (IsSwitch(arg, L"/NSISDL")) {
       options->nsisdl = true;
     } else if (IsSwitch(arg, L"/7ZIP")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /7ZIP.";
+      if (!readOptionValue(&i, L"/7ZIP", &options->sevenZipPath)) {
         return false;
       }
-      options->sevenZipPath = args[i];
     } else if (IsSwitch(arg, L"/CAPTION")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /CAPTION.";
+      if (!readOptionValue(&i, L"/CAPTION", &options->caption)) {
         return false;
       }
-      options->caption = args[i];
     } else if (IsSwitch(arg, L"/TEXT")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /TEXT.";
+      if (!readOptionValue(&i, L"/TEXT", &options->text)) {
         return false;
       }
-      options->text = args[i];
     } else if (IsSwitch(arg, L"/CANCELTEXT")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /CANCELTEXT.";
+      if (!readOptionValue(&i, L"/CANCELTEXT", &options->cancelText)) {
         return false;
       }
-      options->cancelText = args[i];
     } else if (IsSwitch(arg, L"/QUESTION")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /QUESTION.";
+      if (!readOptionValue(&i, L"/QUESTION", &options->question)) {
         return false;
       }
-      options->question = args[i];
     } else if (IsSwitch(arg, L"/EXCLUDE")) {
-      if (++i >= args.size()) {
-        *error = L"Missing value for /EXCLUDE.";
+      std::wstring exclude;
+      if (!readOptionValue(&i, L"/EXCLUDE", &exclude)) {
         return false;
       }
-      options->excludes.push_back(args[i]);
+      options->excludes.push_back(exclude);
     } else if (arg.size() > 0 && arg[0] == L'/') {
       *error = L"Unsupported option: " + arg;
       return false;
@@ -397,6 +402,7 @@ bool ParseOptions(Options *options, std::wstring *error)
       *error = L"Too many positional arguments.";
       return false;
     }
+    ++i;
   }
 
   if (options->sevenZipPath.empty()) {
