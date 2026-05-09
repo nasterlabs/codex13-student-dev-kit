@@ -28,7 +28,7 @@
     "@cspell/dict-pl_pl": "^3.0.6",
     "cspell": "^10.0.0",
     "eclint": "^2.8.1",
-    "markdownlint-cli2": "^0.18.1",
+    "markdownlint-cli2": "^0.22.1",
     "yaml": "^2.8.4"
   }
 }
