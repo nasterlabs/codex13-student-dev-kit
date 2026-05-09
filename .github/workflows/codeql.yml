@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     permissions:
       actions: read
       contents: read
@@ -24,10 +24,14 @@ jobs:
         include:
           - language: actions
             build-mode: none
+            runner: ubuntu-latest
           - language: c-cpp
-            build-mode: none
+            build-mode: manual
+            runner: windows-latest
+            build-command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./packages/nsis-naster-archive/build.ps1 -NoCopy
           - language: javascript-typescript
             build-mode: none
+            runner: ubuntu-latest
 
     steps:
       - name: Checkout repository
@@ -38,7 +42,13 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
+          config-file: ./.github/codeql/codeql-config.yml
           queries: security-extended,security-and-quality
+
+      - name: Build C/C++ code
+        if: matrix.build-mode == 'manual'
+        shell: pwsh
+        run: ${{ matrix.build-command }}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@68bde559dea0fdcac2102bfdf6230c5f70eb485e # v4
