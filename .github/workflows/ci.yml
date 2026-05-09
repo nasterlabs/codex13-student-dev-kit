@@ -47,11 +47,14 @@ jobs:
 
       - name: Run checks
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: task check
 
-  # commitlint and dco run in parallel with check intentionally — they validate
-  # different things (commit messages vs. repo state) and failing fast on either
-  # gives contributors quicker feedback without waiting for the other to finish.
+  # commitlint and commit provenance checks run in parallel with check
+  # intentionally — they validate different things (commit messages vs. repo
+  # state/provenance) and failing fast on either gives contributors quicker
+  # feedback without waiting for the other to finish.
   commitlint:
     name: Conventional commits
     runs-on: ubuntu-latest
@@ -91,7 +94,7 @@ jobs:
         run: pnpm exec commitlint --from "origin/${{ github.base_ref }}" --to "origin/pr/${{ github.event.pull_request.number }}"
 
   dco:
-    name: DCO sign-off
+    name: DCO and signed commits
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
@@ -109,7 +112,9 @@ jobs:
 
       - name: Validate DCO sign-offs
         shell: pwsh
-        run: ./tools/scripts/check-dco.ps1 -From "origin/${{ github.base_ref }}" -To "origin/pr/${{ github.event.pull_request.number }}"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./tools/scripts/check-dco.ps1 -From "origin/${{ github.base_ref }}" -To "origin/pr/${{ github.event.pull_request.number }}" -RequireVerifiedSignatures
 
   build:
     name: Build installer
