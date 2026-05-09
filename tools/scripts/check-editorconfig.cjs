@@ -2,7 +2,14 @@ const { execFileSync } = require('node:child_process');
 const path = require('node:path');
 
 const root = path.resolve(__dirname, '..', '..');
-const eclint = require.resolve('eclint/bin/eclint.js');
+const editorconfigCheckerPackage = path.dirname(
+  require.resolve('editorconfig-checker/package.json'),
+);
+const editorconfigChecker = path.join(
+  editorconfigCheckerPackage,
+  'dist',
+  'index.js',
+);
 
 const trackedFiles = execFileSync('git', ['ls-files'], {
   cwd: root,
@@ -55,8 +62,8 @@ function isCheckable(file) {
   if (file.startsWith('dist/')) return false;
   if (file.startsWith('.build/')) return false;
   if (file === 'pnpm-lock.yaml') return false;
-  // eclint hangs on this PowerShell generator in Node 24; repository checks
-  // still validate it as a required tracked file and execute it directly.
+  // Repository checks still validate this as a required tracked file and
+  // execute it directly.
   if (file === 'tools/scripts/write-release-manifest.ps1') return false;
 
   const base = path.posix.basename(file);
@@ -70,7 +77,7 @@ const batchSize = 50;
 
 for (let index = 0; index < files.length; index += batchSize) {
   const batch = files.slice(index, index + batchSize);
-  execFileSync(process.execPath, [eclint, 'check', ...batch], {
+  execFileSync(process.execPath, [editorconfigChecker, ...batch], {
     cwd: root,
     stdio: 'inherit',
   });
