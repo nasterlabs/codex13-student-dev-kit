@@ -22,7 +22,7 @@
     "check:yaml": "node tools/scripts/check-yaml.cjs"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.2.0",
+    "@commitlint/cli": "^21.0.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@evilmartians/lefthook": "^2.1.6",
     "@cspell/dict-pl_pl": "^3.0.6",
