@@ -1,0 +1,4 @@
+name: Codex13 CodeQL
+
+paths-ignore:
+  - packages/nsis-naster-archive/src/nsis-plugin-api/**
