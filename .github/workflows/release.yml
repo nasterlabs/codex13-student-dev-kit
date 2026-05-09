@@ -66,7 +66,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: pnpm install --frozen-lockfile
 
       - name: Check lockfile was not modified
@@ -74,11 +74,13 @@ jobs:
         run: git diff --exit-code -- pnpm-lock.yaml package.json
 
       - name: Verify vendored binaries
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: ./scripts/verify-vendor.ps1
 
       - name: Run checks
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: task check
 
   release:
@@ -107,12 +109,12 @@ jobs:
 
       - name: Install NSIS
         if: ${{ env.ACT != 'true' }}
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: |
           ./tools/scripts/setup-nsis.ps1
 
       - name: Configure environment
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: |
           $nsis = $env:NSIS_PATH
           if ([string]::IsNullOrWhiteSpace($nsis)) {
@@ -183,7 +185,7 @@ jobs:
 
       - name: Configure production signing
         if: ${{ env.ENABLE_PRODUCTION_SIGNING == 'True' }}
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         env:
           RELEASE_SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
           RELEASE_SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
@@ -221,7 +223,7 @@ jobs:
           }
 
       - name: Update release metadata
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: |
           ./tools/scripts/update-release-metadata.ps1 `
             -BuildVersion $env:BUILD_VERSION `
@@ -229,15 +231,15 @@ jobs:
             -ReleaseUrl "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/$env:RELEASE_TAG_NAME"
 
       - name: Build NSIS plugin
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: task build:nsis-naster-archive
 
       - name: Build release installer
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: task build
 
       - name: Generate checksums
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: |
           $assetName = "Codex13SDK-Setup-win-x64-$env:BUILD_VERSION.exe"
           $assetPath = Join-Path "dist\setup" $assetName
@@ -247,7 +249,7 @@ jobs:
             Set-Content -LiteralPath "$assetPath.sha256" -Encoding ASCII
 
       - name: Generate release manifest
-        shell: powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference = 'Stop'; $global:LASTEXITCODE = 0; Invoke-Expression (Get-Content -LiteralPath '{0}' -Raw); if ($global:LASTEXITCODE -ne 0) { exit $global:LASTEXITCODE }"
+        shell: pwsh
         run: |
           ./tools/scripts/write-release-manifest.ps1 `
             -BuildVersion $env:BUILD_VERSION `
