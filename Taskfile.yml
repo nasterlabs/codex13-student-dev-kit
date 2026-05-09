@@ -167,7 +167,7 @@ tasks:
       - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-conventional-commits.ps1 {{.CLI_ARGS}}
 
   dco:check:
-    desc: Validate DCO sign-offs in a range; pass CLI_ARGS="-From main -To HEAD"
+    desc: Validate DCO sign-offs in a range; pass CLI_ARGS="-From main -To HEAD -RequireVerifiedSignatures"
     platforms: [windows]
     cmds:
       - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-dco.ps1 {{.CLI_ARGS}}

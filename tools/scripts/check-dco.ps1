@@ -1,6 +1,7 @@
 param(
   [string] $From = "main",
-  [string] $To = "HEAD"
+  [string] $To = "HEAD",
+  [switch] $RequireVerifiedSignatures
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,6 +36,63 @@ function Resolve-GitCommand {
 
 $GitCommand = Resolve-GitCommand
 
+function Get-GitHubCommitVerification {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Commit
+  )
+
+  if ([string]::IsNullOrWhiteSpace($env:GITHUB_REPOSITORY) -or [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN)) {
+    return $null
+  }
+
+  $uri = "https://api.github.com/repos/$env:GITHUB_REPOSITORY/commits/$Commit"
+  $headers = @{
+    Accept = "application/vnd.github+json"
+    Authorization = "Bearer $env:GITHUB_TOKEN"
+    "X-GitHub-Api-Version" = "2022-11-28"
+  }
+
+  try {
+    return (Invoke-RestMethod -Method Get -Uri $uri -Headers $headers).commit.verification
+  }
+  catch {
+    Write-Warning "GitHub signature verification lookup failed for $Commit`: $($_.Exception.Message)"
+    return $null
+  }
+}
+
+function Test-CommitSignature {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Commit
+  )
+
+  $verification = Get-GitHubCommitVerification -Commit $Commit
+  if ($null -ne $verification) {
+    if ($verification.verified -eq $true) {
+      return $true
+    }
+
+    Write-Error "Unverified commit signature: $Commit ($($verification.reason))" -ErrorAction Continue
+    return $false
+  }
+
+  $global:LASTEXITCODE = 0
+  $output = & $GitCommand -C $Root verify-commit $Commit 2>&1
+  if ($LASTEXITCODE -eq 0) {
+    return $true
+  }
+
+  $details = ($output | Out-String).Trim()
+  if ([string]::IsNullOrWhiteSpace($details)) {
+    $details = "git verify-commit failed"
+  }
+
+  Write-Error "Unverified commit signature: $Commit ($details)" -ErrorAction Continue
+  return $false
+}
+
 $global:LASTEXITCODE = 0
 $commits = @(& $GitCommand -C $Root rev-list --no-merges $range)
 if ($LASTEXITCODE -ne 0) {
@@ -55,10 +113,23 @@ foreach ($commit in $commits) {
     Write-Error "Missing DCO Signed-off-by trailer: $commit $subject" -ErrorAction Continue
     $failed = $true
   }
+
+  if ($RequireVerifiedSignatures -and -not (Test-CommitSignature -Commit $commit)) {
+    $failed = $true
+  }
 }
 
 if ($failed) {
+  if ($RequireVerifiedSignatures) {
+    throw "DCO and signature checks failed."
+  }
+
   throw "DCO check failed."
 }
 
-Write-Host "DCO check passed for $range."
+if ($RequireVerifiedSignatures) {
+  Write-Host "DCO and signature checks passed for $range."
+}
+else {
+  Write-Host "DCO check passed for $range."
+}
