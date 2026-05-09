@@ -282,6 +282,7 @@ $requiredFiles = @(
   ".github/PULL_REQUEST_TEMPLATE.md",
   ".github/dependabot.yml",
   ".github/workflows/ci.yml",
+  ".github/workflows/codeql.yml",
   ".github/workflows/release.yml",
   "AGENTS.md",
   "CLAUDE.md",
