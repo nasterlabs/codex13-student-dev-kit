@@ -1,6 +1,6 @@
 name: Release
 run-name: >-
-  Release ${{ (github.event_name == 'push' && github.ref_name) || (github.event.inputs.version != '' && github.event.inputs.version) || format('v0.7.0-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
+  Release ${{ (github.event_name == 'push' && github.ref_name) || (inputs.version != '' && inputs.version) || format('v0.7.0-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
 
 on:
   push:
@@ -10,9 +10,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Test build tag version, e.g. v0.7.0-alpha.1. Leave empty to use v0.7.0-alpha.<run_number>."
+        description: "Optional. Must match v<semver>, e.g. v0.7.1-alpha.1. Empty = v0.7.0-alpha.<run_number>."
         required: false
         default: ""
+        type: string
       publish_release:
         description: "Publish GitHub Release"
         required: true
@@ -24,11 +25,8 @@ on:
       enable_signing:
         description: "Allow production signing for this manual run if RELEASE_SIGNING_ENABLED=1 and secrets are configured."
         required: true
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -45,12 +43,19 @@ jobs:
       contents: read
 
     steps:
+      - name: Detect act
+        id: detect-act
+        shell: pwsh
+        run: |
+          $isAct = if ($env:ACT -eq "true") { "true" } else { "false" }
+          "is_act=$isAct" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+
       - name: Show release invocation
         shell: pwsh
         env:
-          INPUT_VERSION: ${{ github.event.inputs.version }}
-          INPUT_PUBLISH_RELEASE: ${{ github.event.inputs.publish_release }}
-          INPUT_ENABLE_SIGNING: ${{ github.event.inputs.enable_signing }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          INPUT_ENABLE_SIGNING: ${{ inputs.enable_signing }}
         run: |
           function Format-Value {
             param([string] $Value)
@@ -101,7 +106,7 @@ jobs:
       - name: Validate release version
         shell: pwsh
         env:
-          INPUT_VERSION: ${{ github.event.inputs.version }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
           $tagSemverPattern = "^v$semverCore$"
@@ -131,19 +136,19 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Task
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 
       - name: Setup pnpm
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
         with:
           version: 10.33.2
 
       - name: Setup Node
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24.15.0
@@ -175,29 +180,37 @@ jobs:
       contents: write
 
     steps:
+      - name: Detect act
+        id: detect-act
+        shell: pwsh
+        run: |
+          $isAct = if ($env:ACT -eq "true") { "true" } else { "false" }
+          "is_act=$isAct" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Task
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 
       - name: Cache NSIS
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .build\nsis
           key: nsis-3.12-${{ runner.os }}
 
       - name: Install NSIS
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         shell: pwsh
         run: |
           ./tools/scripts/setup-nsis.ps1
 
       - name: Configure environment
+        id: configure-environment
         shell: pwsh
         run: |
           $nsis = $env:NSIS_PATH
@@ -222,9 +235,9 @@ jobs:
           }
 
           $isTagRelease = $env:GITHUB_REF -like "refs/tags/v*"
-          $manualVersion = "${{ github.event.inputs.version }}"
-          $manualPublishRelease = "${{ github.event.inputs.publish_release }}"
-          $manualEnableSigning = "${{ github.event.inputs.enable_signing }}"
+          $manualVersion = "${{ inputs.version }}"
+          $manualPublishRelease = "${{ inputs.publish_release }}"
+          $manualEnableSigning = "${{ inputs.enable_signing }}"
           $repoReleaseSigningEnabled = "${{ vars.RELEASE_SIGNING_ENABLED }}"
 
           $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
@@ -280,13 +293,26 @@ jobs:
           "IS_DRAFT_RELEASE=$isDraftRelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
           "ENABLE_PRODUCTION_SIGNING=$enableProductionSigning" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
 
+          $outputs = @{
+            build_version = $buildVersion
+            release_tag_name = $releaseTagName
+            is_prerelease = $isPrerelease.ToString().ToLowerInvariant()
+            publish_github_release = $publishGithubRelease.ToString().ToLowerInvariant()
+            is_draft_release = $isDraftRelease.ToString().ToLowerInvariant()
+            enable_production_signing = $enableProductionSigning.ToString().ToLowerInvariant()
+          }
+
+          foreach ($entry in $outputs.GetEnumerator()) {
+            "$($entry.Key)=$($entry.Value)" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+          }
+
       - name: Configure production signing
-        if: ${{ env.ENABLE_PRODUCTION_SIGNING == 'True' }}
+        if: ${{ steps.configure-environment.outputs.enable_production_signing == 'true' }}
         shell: pwsh
         env:
           RELEASE_SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
           RELEASE_SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
-          RELEASE_SIGN_TIMESTAMP_URL: ${{ secrets.SIGN_TIMESTAMP_URL }}
+          RELEASE_SIGN_TIMESTAMP_URL: ${{ vars.SIGN_TIMESTAMP_URL }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGN_PFX_BASE64)) {
             throw "ENABLE_PRODUCTION_SIGNING=True, but SIGN_PFX_BASE64 is not configured."
@@ -355,28 +381,28 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Codex13SDK-Setup-${{ env.BUILD_VERSION }}
+          name: Codex13SDK-Setup-${{ steps.configure-environment.outputs.build_version }}
           path: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
             dist/setup/Codex13SDK.release-notes.md
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
           if-no-files-found: error
 
       - name: Publish GitHub Release
-        if: ${{ env.PUBLISH_GITHUB_RELEASE == 'True' }}
+        if: ${{ steps.configure-environment.outputs.publish_github_release == 'true' }}
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
-          tag_name: ${{ env.RELEASE_TAG_NAME }}
-          name: Codex 13 Student Dev Kit ${{ env.BUILD_VERSION }}
+          tag_name: ${{ steps.configure-environment.outputs.release_tag_name }}
+          name: Codex 13 Student Dev Kit ${{ steps.configure-environment.outputs.build_version }}
           body_path: dist/setup/Codex13SDK.release-notes.md
-          draft: ${{ env.IS_DRAFT_RELEASE == 'True' }}
-          prerelease: ${{ env.IS_PRERELEASE == 'True' }}
+          draft: ${{ steps.configure-environment.outputs.is_draft_release == 'true' }}
+          prerelease: ${{ steps.configure-environment.outputs.is_prerelease == 'true' }}
           make_latest: false
           files: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
           generate_release_notes: false
