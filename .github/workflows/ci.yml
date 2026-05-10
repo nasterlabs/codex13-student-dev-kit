@@ -55,6 +55,42 @@ jobs:
   # intentionally — they validate different things (commit messages vs. repo
   # state/provenance) and failing fast on either gives contributors quicker
   # feedback without waiting for the other to finish.
+  pr-metadata:
+    name: Pull request metadata
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
+        with:
+          version: 10.33.2
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          mkdir -p .build
+          printf '%s\n' "$PR_TITLE" > .build/pr-title.txt
+          pnpm exec commitlint --edit .build/pr-title.txt
+
+      - name: Validate PR branch and body
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: node tools/scripts/check-pr-metadata.cjs
+
   commitlint:
     name: Conventional commits
     runs-on: ubuntu-latest
@@ -96,7 +132,7 @@ jobs:
   dco:
     name: DCO and signed commits
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -104,17 +140,26 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch PR range
+        if: github.event_name == 'pull_request'
         shell: pwsh
         run: |
           git fetch --no-tags origin `
             "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" `
             "+refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pr/${{ github.event.pull_request.number }}"
 
-      - name: Validate DCO sign-offs
+      - name: Validate PR commits
+        if: github.event_name == 'pull_request'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: ./tools/scripts/check-dco.ps1 -From "origin/${{ github.base_ref }}" -To "origin/pr/${{ github.event.pull_request.number }}" -RequireVerifiedSignatures
+
+      - name: Validate pushed commits
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./tools/scripts/check-dco.ps1 -From "${{ github.event.before }}" -To "${{ github.sha }}" -RequireVerifiedSignatures
 
   build:
     name: Build installer

@@ -14,6 +14,36 @@ The installer product version core is defined in `apps/setup/src/nsis/config.nsh
 actual installer build version is resolved by `apps/setup/scripts/build.ps1` from
 `BUILD_VERSION`.
 
+`APP_VERSION` is the source of truth for the installer version core
+(`major.minor.patch`). Release tags and manual release workflow test versions
+may add prerelease or build metadata, but their SemVer core must match
+`APP_VERSION`. For example, while `APP_VERSION` is `0.7.0`, these versions are
+valid release workflow inputs:
+
+```text
+v0.7.0-alpha.1
+v0.7.0-alpha.1+test.0
+```
+
+This version is rejected until `APP_VERSION` is updated to `0.7.1` in
+`apps/setup/src/nsis/config.nsh`:
+
+```text
+v0.7.1-alpha.1
+```
+
+Before starting a new release line:
+
+1. Update `APP_VERSION` in `apps/setup/src/nsis/config.nsh`.
+2. Update related release metadata and documentation in the same branch.
+3. Merge the version bump to `main`.
+4. Create the `v<semver>` tag from that merged commit.
+5. Run the release workflow from the tag.
+
+The release workflow validates this before the expensive release build job. If
+the version core does not match `APP_VERSION`, the run fails in
+`Pre-release checks` and links back to this section.
+
 The first public release line uses a numeric alpha build suffix:
 
 ```text
@@ -69,8 +99,9 @@ The release workflow:
    to a GitHub Release when the run is allowed to publish one.
 
 On tag builds, the workflow derives `BUILD_VERSION` from the tag name. Manual
-workflow dispatch can use an explicit test version or
-`0.7.0-alpha.<github_run_number>`.
+workflow dispatch can use an explicit test version such as
+`v0.7.0-alpha.1+test.0`; if the field is empty, the workflow uses
+`v<APP_VERSION>-alpha.<github_run_number>`.
 
 ## Release Manifest
 

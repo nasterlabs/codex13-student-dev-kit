@@ -1,4 +1,6 @@
 name: Release
+run-name: >-
+  Release ${{ (github.event_name == 'push' && github.ref_name) || (inputs.version != '' && inputs.version) || format('v0.7.0-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
 
 on:
   push:
@@ -8,9 +10,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Test build version, e.g. 0.7.0-alpha.1. Leave empty to use 0.7.0-alpha.<run_number>."
+        description: "Optional. Must match v<semver>, e.g. v0.7.1-alpha.1. Empty = v0.7.0-alpha.<run_number>."
         required: false
         default: ""
+        type: string
       publish_release:
         description: "Publish GitHub Release"
         required: true
@@ -22,11 +25,8 @@ on:
       enable_signing:
         description: "Allow production signing for this manual run if RELEASE_SIGNING_ENABLED=1 and secrets are configured."
         required: true
-        default: "false"
-        type: choice
-        options:
-          - "false"
-          - "true"
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -43,23 +43,132 @@ jobs:
       contents: read
 
     steps:
+      - name: Detect act
+        id: detect-act
+        shell: pwsh
+        run: |
+          $isAct = if ($env:ACT -eq "true") { "true" } else { "false" }
+          "is_act=$isAct" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+
+      - name: Show release invocation
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_PUBLISH_RELEASE: ${{ inputs.publish_release }}
+          INPUT_ENABLE_SIGNING: ${{ inputs.enable_signing }}
+        run: |
+          function Format-Value {
+            param([string] $Value)
+
+            if ([string]::IsNullOrWhiteSpace($Value)) {
+              return "(empty)"
+            }
+
+            return $Value
+          }
+
+          $isTagRelease = $env:GITHUB_REF -like "refs/tags/v*"
+          $trigger = if ($isTagRelease) { "tag" } elseif ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch") { "manual" } else { $env:GITHUB_EVENT_NAME }
+
+          $lines = @(
+            "Release invocation",
+            "  trigger: $trigger",
+            "  event: $env:GITHUB_EVENT_NAME",
+            "  ref: $env:GITHUB_REF",
+            "  ref_name: $env:GITHUB_REF_NAME",
+            "  sha: $env:GITHUB_SHA",
+            "  actor: $env:GITHUB_ACTOR",
+            "  run_attempt: $env:GITHUB_RUN_ATTEMPT",
+            "  inputs.version: $(Format-Value $env:INPUT_VERSION)",
+            "  inputs.publish_release: $(Format-Value $env:INPUT_PUBLISH_RELEASE)",
+            "  inputs.enable_signing: $(Format-Value $env:INPUT_ENABLE_SIGNING)"
+          )
+
+          $lines | ForEach-Object { Write-Host $_ }
+
+          @(
+            "## Release invocation",
+            "",
+            "| Field | Value |",
+            "| --- | --- |",
+            "| Trigger | ``$trigger`` |",
+            "| Event | ``$($env:GITHUB_EVENT_NAME)`` |",
+            "| Ref | ``$($env:GITHUB_REF)`` |",
+            "| Ref name | ``$($env:GITHUB_REF_NAME)`` |",
+            "| SHA | ``$($env:GITHUB_SHA)`` |",
+            "| Actor | ``$($env:GITHUB_ACTOR)`` |",
+            "| Run attempt | ``$($env:GITHUB_RUN_ATTEMPT)`` |",
+            "| inputs.version | ``$(Format-Value $env:INPUT_VERSION)`` |",
+            "| inputs.publish_release | ``$(Format-Value $env:INPUT_PUBLISH_RELEASE)`` |",
+            "| inputs.enable_signing | ``$(Format-Value $env:INPUT_ENABLE_SIGNING)`` |"
+          ) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Validate release version
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $tagSemverPattern = "^v$semverCore$"
+          $configPath = "apps/setup/src/nsis/config.nsh"
+          $configText = Get-Content -LiteralPath $configPath -Raw
+          $appVersionMatch = [regex]::Match($configText, '(?m)^\s*!define\s+APP_VERSION\s+"(?<version>[^"]+)"')
+          if (-not $appVersionMatch.Success) {
+            throw "Cannot read APP_VERSION from $configPath."
+          }
+
+          $appVersion = $appVersionMatch.Groups["version"].Value
+          if ($appVersion -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw "APP_VERSION must match major.minor.patch. Actual: $appVersion"
+          }
+
+          if ($env:GITHUB_REF -like "refs/tags/v*") {
+            if ($env:GITHUB_REF_NAME -notmatch $tagSemverPattern) {
+              throw "Release tag must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:GITHUB_REF_NAME"
+            }
+
+            $releaseVersion = $env:GITHUB_REF_NAME
+            Write-Host "Release tag version is valid: $releaseVersion"
+          } elseif (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
+            if ($env:INPUT_VERSION -notmatch $tagSemverPattern) {
+              throw "Manual test build version must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:INPUT_VERSION"
+            }
+
+            $releaseVersion = $env:INPUT_VERSION
+            Write-Host "Manual test build version is valid: $releaseVersion"
+          } else {
+            $releaseVersion = "v$appVersion-alpha.$env:GITHUB_RUN_NUMBER"
+            if ($releaseVersion -notmatch $tagSemverPattern) {
+              throw "Default test build version must match v<semver>. Actual: $releaseVersion"
+            }
+
+            Write-Host "Default test build version is valid: $releaseVersion"
+          }
+
+          $releaseVersionCore = (($releaseVersion -replace '^v', '') -split '[-+]', 2)[0]
+          if ($releaseVersionCore -ne $appVersion) {
+            throw "Release version core ($releaseVersionCore) must match APP_VERSION ($appVersion). Update $configPath before releasing $releaseVersion, or use a v$appVersion... test version. See https://github.com/nasterlabs/codex13-student-dev-kit/blob/main/docs/release.md#version-source"
+          }
+
+          Write-Host "Release version matches APP_VERSION: $appVersion"
+
       - name: Install Task
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 
       - name: Setup pnpm
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
         with:
           version: 10.33.2
 
       - name: Setup Node
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: 24.15.0
@@ -91,29 +200,37 @@ jobs:
       contents: write
 
     steps:
+      - name: Detect act
+        id: detect-act
+        shell: pwsh
+        run: |
+          $isAct = if ($env:ACT -eq "true") { "true" } else { "false" }
+          "is_act=$isAct" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Task
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 
       - name: Cache NSIS
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .build\nsis
           key: nsis-3.12-${{ runner.os }}
 
       - name: Install NSIS
-        if: ${{ env.ACT != 'true' }}
+        if: ${{ steps.detect-act.outputs.is_act != 'true' }}
         shell: pwsh
         run: |
           ./tools/scripts/setup-nsis.ps1
 
       - name: Configure environment
+        id: configure-environment
         shell: pwsh
         run: |
           $nsis = $env:NSIS_PATH
@@ -138,25 +255,50 @@ jobs:
           }
 
           $isTagRelease = $env:GITHUB_REF -like "refs/tags/v*"
-          $manualVersion = "${{ github.event.inputs.version }}"
-          $manualPublishRelease = "${{ github.event.inputs.publish_release }}"
-          $manualEnableSigning = "${{ github.event.inputs.enable_signing }}"
+          $manualVersion = "${{ inputs.version }}"
+          $manualPublishRelease = "${{ inputs.publish_release }}"
+          $manualEnableSigning = "${{ inputs.enable_signing }}"
           $repoReleaseSigningEnabled = "${{ vars.RELEASE_SIGNING_ENABLED }}"
+          $configPath = "apps/setup/src/nsis/config.nsh"
+          $configText = Get-Content -LiteralPath $configPath -Raw
+          $appVersionMatch = [regex]::Match($configText, '(?m)^\s*!define\s+APP_VERSION\s+"(?<version>[^"]+)"')
+          if (-not $appVersionMatch.Success) {
+            throw "Cannot read APP_VERSION from $configPath."
+          }
+          $appVersion = $appVersionMatch.Groups["version"].Value
+
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $tagSemverPattern = "^v(?<version>$semverCore)$"
 
           if ($isTagRelease) {
-            $buildVersion = $env:GITHUB_REF_NAME -replace '^v', ''
+            $tagMatch = [regex]::Match($env:GITHUB_REF_NAME, $tagSemverPattern)
+            if (-not $tagMatch.Success) {
+              throw "Release tag must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:GITHUB_REF_NAME"
+            }
+
+            $buildVersion = $tagMatch.Groups["version"].Value
             $releaseTagName = $env:GITHUB_REF_NAME
           } elseif (-not [string]::IsNullOrWhiteSpace($manualVersion)) {
-            $buildVersion = $manualVersion
+            $manualVersionMatch = [regex]::Match($manualVersion, $tagSemverPattern)
+            if (-not $manualVersionMatch.Success) {
+              throw "Manual test build version must match v<semver>, for example v0.7.1-alpha.1. Actual: $manualVersion"
+            }
+
+            $buildVersion = $manualVersionMatch.Groups["version"].Value
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           } else {
-            $buildVersion = "0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
+            $buildVersion = "$appVersion-alpha.$env:GITHUB_RUN_NUMBER"
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           }
 
-          $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
-          if ($buildVersion -notmatch $semverPattern) {
+          $buildSemverPattern = "^$semverCore$"
+          if ($buildVersion -notmatch $buildSemverPattern) {
             throw "Tag or workflow input must produce a valid semver BUILD_VERSION. Actual: $buildVersion"
+          }
+
+          $buildVersionCore = ($buildVersion -split '[-+]', 2)[0]
+          if ($buildVersionCore -ne $appVersion) {
+            throw "BUILD_VERSION core ($buildVersionCore) must match APP_VERSION ($appVersion). Update $configPath before releasing v$buildVersion, or use a v$appVersion... test version. See https://github.com/nasterlabs/codex13-student-dev-kit/blob/main/docs/release.md#version-source"
           }
 
           $isPrerelease = $buildVersion.Contains("-")
@@ -183,13 +325,26 @@ jobs:
           "IS_DRAFT_RELEASE=$isDraftRelease" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
           "ENABLE_PRODUCTION_SIGNING=$enableProductionSigning" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding ASCII
 
+          $outputs = @{
+            build_version = $buildVersion
+            release_tag_name = $releaseTagName
+            is_prerelease = $isPrerelease.ToString().ToLowerInvariant()
+            publish_github_release = $publishGithubRelease.ToString().ToLowerInvariant()
+            is_draft_release = $isDraftRelease.ToString().ToLowerInvariant()
+            enable_production_signing = $enableProductionSigning.ToString().ToLowerInvariant()
+          }
+
+          foreach ($entry in $outputs.GetEnumerator()) {
+            "$($entry.Key)=$($entry.Value)" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+          }
+
       - name: Configure production signing
-        if: ${{ env.ENABLE_PRODUCTION_SIGNING == 'True' }}
+        if: ${{ steps.configure-environment.outputs.enable_production_signing == 'true' }}
         shell: pwsh
         env:
           RELEASE_SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
           RELEASE_SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
-          RELEASE_SIGN_TIMESTAMP_URL: ${{ secrets.SIGN_TIMESTAMP_URL }}
+          RELEASE_SIGN_TIMESTAMP_URL: ${{ vars.SIGN_TIMESTAMP_URL }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGN_PFX_BASE64)) {
             throw "ENABLE_PRODUCTION_SIGNING=True, but SIGN_PFX_BASE64 is not configured."
@@ -258,28 +413,28 @@ jobs:
       - name: Upload release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: Codex13SDK-Setup-${{ env.BUILD_VERSION }}
+          name: Codex13SDK-Setup-${{ steps.configure-environment.outputs.build_version }}
           path: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
             dist/setup/Codex13SDK.release-notes.md
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
           if-no-files-found: error
 
       - name: Publish GitHub Release
-        if: ${{ env.PUBLISH_GITHUB_RELEASE == 'True' }}
+        if: ${{ steps.configure-environment.outputs.publish_github_release == 'true' }}
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
-          tag_name: ${{ env.RELEASE_TAG_NAME }}
-          name: Codex 13 Student Dev Kit ${{ env.BUILD_VERSION }}
+          tag_name: ${{ steps.configure-environment.outputs.release_tag_name }}
+          name: Codex 13 Student Dev Kit ${{ steps.configure-environment.outputs.build_version }}
           body_path: dist/setup/Codex13SDK.release-notes.md
-          draft: ${{ env.IS_DRAFT_RELEASE == 'True' }}
-          prerelease: ${{ env.IS_PRERELEASE == 'True' }}
+          draft: ${{ steps.configure-environment.outputs.is_draft_release == 'true' }}
+          prerelease: ${{ steps.configure-environment.outputs.is_prerelease == 'true' }}
           make_latest: false
           files: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ env.BUILD_VERSION }}.exe.sha256
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.release-manifest.json
-            dist/setup/codex13-sdk-${{ env.BUILD_VERSION }}.changelog.md
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
+            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
+            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
           generate_release_notes: false
