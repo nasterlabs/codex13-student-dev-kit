@@ -1,4 +1,6 @@
 name: Release
+run-name: >-
+  Release ${{ (github.event_name == 'push' && github.ref_name) || (github.event.inputs.version != '' && github.event.inputs.version) || format('v0.7.0-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && github.event.inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
 
 on:
   push:
@@ -8,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Test build version, e.g. 0.7.0-alpha.1. Leave empty to use 0.7.0-alpha.<run_number>."
+        description: "Test build tag version, e.g. v0.7.0-alpha.1. Leave empty to use v0.7.0-alpha.<run_number>."
         required: false
         default: ""
       publish_release:
@@ -95,6 +97,35 @@ jobs:
             "| inputs.publish_release | ``$(Format-Value $env:INPUT_PUBLISH_RELEASE)`` |",
             "| inputs.enable_signing | ``$(Format-Value $env:INPUT_ENABLE_SIGNING)`` |"
           ) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+
+      - name: Validate release version
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $tagSemverPattern = "^v$semverCore$"
+
+          if ($env:GITHUB_REF -like "refs/tags/v*") {
+            if ($env:GITHUB_REF_NAME -notmatch $tagSemverPattern) {
+              throw "Release tag must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:GITHUB_REF_NAME"
+            }
+
+            Write-Host "Release tag version is valid: $env:GITHUB_REF_NAME"
+          } elseif (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
+            if ($env:INPUT_VERSION -notmatch $tagSemverPattern) {
+              throw "Manual test build version must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:INPUT_VERSION"
+            }
+
+            Write-Host "Manual test build version is valid: $env:INPUT_VERSION"
+          } else {
+            $defaultVersion = "v0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
+            if ($defaultVersion -notmatch $tagSemverPattern) {
+              throw "Default test build version must match v<semver>. Actual: $defaultVersion"
+            }
+
+            Write-Host "Default test build version is valid: $defaultVersion"
+          }
 
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -196,19 +227,32 @@ jobs:
           $manualEnableSigning = "${{ github.event.inputs.enable_signing }}"
           $repoReleaseSigningEnabled = "${{ vars.RELEASE_SIGNING_ENABLED }}"
 
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $tagSemverPattern = "^v(?<version>$semverCore)$"
+
           if ($isTagRelease) {
-            $buildVersion = $env:GITHUB_REF_NAME -replace '^v', ''
+            $tagMatch = [regex]::Match($env:GITHUB_REF_NAME, $tagSemverPattern)
+            if (-not $tagMatch.Success) {
+              throw "Release tag must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:GITHUB_REF_NAME"
+            }
+
+            $buildVersion = $tagMatch.Groups["version"].Value
             $releaseTagName = $env:GITHUB_REF_NAME
           } elseif (-not [string]::IsNullOrWhiteSpace($manualVersion)) {
-            $buildVersion = $manualVersion
+            $manualVersionMatch = [regex]::Match($manualVersion, $tagSemverPattern)
+            if (-not $manualVersionMatch.Success) {
+              throw "Manual test build version must match v<semver>, for example v0.7.1-alpha.1. Actual: $manualVersion"
+            }
+
+            $buildVersion = $manualVersionMatch.Groups["version"].Value
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           } else {
             $buildVersion = "0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           }
 
-          $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
-          if ($buildVersion -notmatch $semverPattern) {
+          $buildSemverPattern = "^$semverCore$"
+          if ($buildVersion -notmatch $buildSemverPattern) {
             throw "Tag or workflow input must produce a valid semver BUILD_VERSION. Actual: $buildVersion"
           }
 
