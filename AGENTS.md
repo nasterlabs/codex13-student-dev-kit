@@ -26,10 +26,11 @@ The future **Manager** app will live under `apps/manager`. Shared or separately 
 
 This project uses Task as the developer task runner and `task build` is the
 primary build command used by VS Code tasks and release-prep verification. On
-Windows, install it with:
+Windows, install Task and PowerShell 7 with:
 
 ```powershell
 winget install Task.Task
+winget install Microsoft.PowerShell
 ```
 
 Build from the repository root:

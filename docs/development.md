@@ -11,7 +11,7 @@ repo-level automation lives under `tools/scripts`.
 ## Required Tools
 
 - Windows 10/11.
-- PowerShell 5.1 or newer.
+- PowerShell 7 or newer (`pwsh`).
 - Git.
 - Task: `winget install Task.Task`.
 - Volta with Node.js and pnpm pinned by `package.json`.
@@ -23,6 +23,12 @@ Optional:
 
 - VS Code with recommended extensions from `.vscode/extensions.json`.
 - Windows SDK `signtool.exe` for local signing.
+
+Install PowerShell 7 with:
+
+```powershell
+winget install Microsoft.PowerShell
+```
 
 ## Environment
 
@@ -189,7 +195,7 @@ include `bash`. Alternatively, run the task from a WSL shell.
 ## WSL Notes
 
 Editing from WSL is fine. The actual build targets Windows tooling, so run Task
-from Windows PowerShell, Windows Terminal, or an environment where `NSIS_PATH`
+from PowerShell 7, Windows Terminal, or an environment where `NSIS_PATH`
 resolves to a Windows `makensis.exe`.
 
 ## Encoding

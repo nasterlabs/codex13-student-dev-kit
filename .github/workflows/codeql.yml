@@ -28,7 +28,7 @@ jobs:
           - language: c-cpp
             build-mode: manual
             runner: windows-latest
-            build-command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./packages/nsis-naster-archive/build.ps1 -NoCopy
+            build-command: ./packages/nsis-naster-archive/build.ps1 -NoCopy
           - language: javascript-typescript
             build-mode: none
             runner: ubuntu-latest
