@@ -103,6 +103,9 @@ jobs:
             "| inputs.enable_signing | ``$(Format-Value $env:INPUT_ENABLE_SIGNING)`` |"
           ) | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY -Encoding UTF8
 
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - name: Validate release version
         shell: pwsh
         env:
@@ -110,30 +113,47 @@ jobs:
         run: |
           $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
           $tagSemverPattern = "^v$semverCore$"
+          $configPath = "apps/setup/src/nsis/config.nsh"
+          $configText = Get-Content -LiteralPath $configPath -Raw
+          $appVersionMatch = [regex]::Match($configText, '(?m)^\s*!define\s+APP_VERSION\s+"(?<version>[^"]+)"')
+          if (-not $appVersionMatch.Success) {
+            throw "Cannot read APP_VERSION from $configPath."
+          }
+
+          $appVersion = $appVersionMatch.Groups["version"].Value
+          if ($appVersion -notmatch '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$') {
+            throw "APP_VERSION must match major.minor.patch. Actual: $appVersion"
+          }
 
           if ($env:GITHUB_REF -like "refs/tags/v*") {
             if ($env:GITHUB_REF_NAME -notmatch $tagSemverPattern) {
               throw "Release tag must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:GITHUB_REF_NAME"
             }
 
-            Write-Host "Release tag version is valid: $env:GITHUB_REF_NAME"
+            $releaseVersion = $env:GITHUB_REF_NAME
+            Write-Host "Release tag version is valid: $releaseVersion"
           } elseif (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
             if ($env:INPUT_VERSION -notmatch $tagSemverPattern) {
               throw "Manual test build version must match v<semver>, for example v0.7.1-alpha.1. Actual: $env:INPUT_VERSION"
             }
 
-            Write-Host "Manual test build version is valid: $env:INPUT_VERSION"
+            $releaseVersion = $env:INPUT_VERSION
+            Write-Host "Manual test build version is valid: $releaseVersion"
           } else {
-            $defaultVersion = "v0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
-            if ($defaultVersion -notmatch $tagSemverPattern) {
-              throw "Default test build version must match v<semver>. Actual: $defaultVersion"
+            $releaseVersion = "v$appVersion-alpha.$env:GITHUB_RUN_NUMBER"
+            if ($releaseVersion -notmatch $tagSemverPattern) {
+              throw "Default test build version must match v<semver>. Actual: $releaseVersion"
             }
 
-            Write-Host "Default test build version is valid: $defaultVersion"
+            Write-Host "Default test build version is valid: $releaseVersion"
           }
 
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+          $releaseVersionCore = (($releaseVersion -replace '^v', '') -split '[-+]', 2)[0]
+          if ($releaseVersionCore -ne $appVersion) {
+            throw "Release version core ($releaseVersionCore) must match APP_VERSION ($appVersion). Update $configPath before releasing $releaseVersion, or use a v$appVersion... test version. See https://github.com/nasterlabs/codex13-student-dev-kit/blob/main/docs/release.md#version-source"
+          }
+
+          Write-Host "Release version matches APP_VERSION: $appVersion"
 
       - name: Install Task
         if: ${{ steps.detect-act.outputs.is_act != 'true' }}
@@ -239,6 +259,13 @@ jobs:
           $manualPublishRelease = "${{ inputs.publish_release }}"
           $manualEnableSigning = "${{ inputs.enable_signing }}"
           $repoReleaseSigningEnabled = "${{ vars.RELEASE_SIGNING_ENABLED }}"
+          $configPath = "apps/setup/src/nsis/config.nsh"
+          $configText = Get-Content -LiteralPath $configPath -Raw
+          $appVersionMatch = [regex]::Match($configText, '(?m)^\s*!define\s+APP_VERSION\s+"(?<version>[^"]+)"')
+          if (-not $appVersionMatch.Success) {
+            throw "Cannot read APP_VERSION from $configPath."
+          }
+          $appVersion = $appVersionMatch.Groups["version"].Value
 
           $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
           $tagSemverPattern = "^v(?<version>$semverCore)$"
@@ -260,13 +287,18 @@ jobs:
             $buildVersion = $manualVersionMatch.Groups["version"].Value
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           } else {
-            $buildVersion = "0.7.0-alpha.$env:GITHUB_RUN_NUMBER"
+            $buildVersion = "$appVersion-alpha.$env:GITHUB_RUN_NUMBER"
             $releaseTagName = "test-release-$env:GITHUB_RUN_NUMBER"
           }
 
           $buildSemverPattern = "^$semverCore$"
           if ($buildVersion -notmatch $buildSemverPattern) {
             throw "Tag or workflow input must produce a valid semver BUILD_VERSION. Actual: $buildVersion"
+          }
+
+          $buildVersionCore = ($buildVersion -split '[-+]', 2)[0]
+          if ($buildVersionCore -ne $appVersion) {
+            throw "BUILD_VERSION core ($buildVersionCore) must match APP_VERSION ($appVersion). Update $configPath before releasing v$buildVersion, or use a v$appVersion... test version. See https://github.com/nasterlabs/codex13-student-dev-kit/blob/main/docs/release.md#version-source"
           }
 
           $isPrerelease = $buildVersion.Contains("-")
