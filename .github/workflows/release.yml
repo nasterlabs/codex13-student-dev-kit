@@ -424,17 +424,32 @@ jobs:
 
       - name: Publish GitHub Release
         if: ${{ steps.configure-environment.outputs.publish_github_release == 'true' }}
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
-        with:
-          tag_name: ${{ steps.configure-environment.outputs.release_tag_name }}
-          name: Codex 13 Student Dev Kit ${{ steps.configure-environment.outputs.build_version }}
-          body_path: dist/setup/Codex13SDK.release-notes.md
-          draft: ${{ steps.configure-environment.outputs.is_draft_release == 'true' }}
-          prerelease: ${{ steps.configure-environment.outputs.is_prerelease == 'true' }}
-          make_latest: false
-          files: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
-          generate_release_notes: false
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseArgs = @(
+            $env:RELEASE_TAG_NAME,
+            "--title", "Codex 13 Student Dev Kit $env:BUILD_VERSION",
+            "--target", $env:GITHUB_SHA,
+            "--notes-file", "dist/setup/Codex13SDK.release-notes.md",
+            "--latest=false"
+          )
+
+          if ($env:IS_DRAFT_RELEASE -eq "true") {
+            $releaseArgs += "--draft"
+          }
+
+          if ($env:IS_PRERELEASE -eq "true") {
+            $releaseArgs += "--prerelease"
+          }
+
+          # The asset#label syntax gives the GitHub Release asset panel friendly display names.
+          $releaseArgs += @(
+            "dist/setup/Codex13SDK-Setup-win-x64-$env:BUILD_VERSION.exe#Codex 13 Student Dev Kit Setup for Windows x64",
+            "dist/setup/Codex13SDK-Setup-win-x64-$env:BUILD_VERSION.exe.sha256#SHA256 checksum for the Windows x64 setup",
+            "dist/setup/codex13-sdk-$env:BUILD_VERSION.release-manifest.json#Codex 13 SDK release manifest",
+            "dist/setup/codex13-sdk-$env:BUILD_VERSION.changelog.md#Codex 13 SDK changelog snapshot"
+          )
+
+          gh release create @releaseArgs

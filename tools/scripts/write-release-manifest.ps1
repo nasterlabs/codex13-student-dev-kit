@@ -191,6 +191,78 @@ function New-ToolEntry {
   }
 }
 
+function Get-ChangelogSection {
+  param(
+    [Parameter(Mandatory = $true)]
+    [string] $Path,
+
+    [Parameter(Mandatory = $true)]
+    [string] $Version
+  )
+
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+    return @()
+  }
+
+  $lines = @(Get-Content -LiteralPath $Path)
+  $lineCount = $lines.Length
+  $startPattern = "^\s*##\s+\[$([regex]::Escape($Version))\]"
+  $startIndex = -1
+  for ($index = 0; $index -lt $lineCount; $index++) {
+    if ($lines[$index] -match $startPattern) {
+      $startIndex = $index + 1
+      break
+    }
+  }
+
+  if ($startIndex -lt 0) {
+    return @()
+  }
+
+  $sectionLines = New-Object System.Collections.Generic.List[string]
+  for ($index = $startIndex; $index -lt $lineCount; $index++) {
+    if ($lines[$index] -match '^\s*##\s+') {
+      break
+    }
+
+    $sectionLines.Add($lines[$index])
+  }
+
+  return $sectionLines.ToArray()
+}
+
+function Add-ChangelogSection {
+  param(
+    [System.Collections.Generic.List[string]] $Notes,
+
+    [string[]] $SectionLines
+  )
+
+  if ($null -eq $SectionLines -or $SectionLines.Length -eq 0) {
+    return
+  }
+
+  $Notes.Add("## What's Changed")
+  $Notes.Add("")
+
+  foreach ($line in $SectionLines) {
+    if ($line -match '^\s*###\s+(.+?)\s*$') {
+      $Notes.Add("### $($Matches[1])")
+    }
+    elseif ($line -match '^\s*-\s+(.+?)\s*$') {
+      $Notes.Add("- $($Matches[1])")
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($line)) {
+      $Notes.Add($line)
+    }
+    else {
+      $Notes.Add("")
+    }
+  }
+
+  $Notes.Add("")
+}
+
 $configFullPath = Resolve-RepoPath -Path $ConfigPath
 if (-not (Test-Path -LiteralPath $configFullPath -PathType Leaf)) {
   throw "Config file not found: $configFullPath"
@@ -301,37 +373,52 @@ $sourceChangelogPath = Join-Path $Root "CHANGELOG.md"
 if (Test-Path -LiteralPath $sourceChangelogPath -PathType Leaf) {
   Copy-Item -LiteralPath $sourceChangelogPath -Destination $changelogFullPath -Force
 }
+$changelogSection = Get-ChangelogSection -Path $sourceChangelogPath -Version $appVersion
 
 $notes = New-Object System.Collections.Generic.List[string]
-$notes.Add("Codex 13 Student Dev Kit $BuildVersion")
+$notes.Add("# Codex 13 Student Dev Kit $BuildVersion")
 $notes.Add("")
-$notes.Add("This alpha release packages the Windows installer used to set up a portable Windows development environment under ``%LOCALAPPDATA%\Codex13\StudentDevKit``.")
+$notes.Add("A portable Windows classroom development kit installer for Visual Studio Code, Git and XAMPP.")
 $notes.Add("")
-$notes.Add("It is intended for release validation and early classroom testing. Public builds stay on the ``$appVersion-alpha.<build_number>`` line while the installer, signing and update process are being hardened.")
+$notes.Add("This alpha build is intended for release validation and early classroom testing. Public builds stay on the ``$appVersion-alpha.<build_number>`` line while installer signing and update hardening continue.")
 $notes.Add("")
-$notes.Add("Signing status: this workflow build is unsigned unless production signing is explicitly enabled for the release run.")
+$notes.Add("## Highlights")
 $notes.Add("")
+$notes.Add("- Installs into ``%LOCALAPPDATA%\Codex13\StudentDevKit`` without administrator rights.")
+$notes.Add("- Keeps the active alpha experience focused on ``Start`` and ``Classroom`` profiles.")
+$notes.Add("- Uses pinned downloads and SHA256 checks for every bundled tool.")
+$notes.Add("- Writes an installation manifest for future Manager and diagnostics workflows.")
+$notes.Add("")
+Add-ChangelogSection -Notes $notes -SectionLines $changelogSection
 $notes.Add("## Included Profiles")
 $notes.Add("")
-$notes.Add("- ``Start`` profile installs Visual Studio Code portable.")
-$notes.Add("- ``Classroom`` profile installs Visual Studio Code portable, Git for Windows portable and XAMPP portable.")
+$notes.Add("| Profile | Preset | Included tools | Status |")
+$notes.Add("| --- | --- | --- | --- |")
+$notes.Add("| Start | ``clean-vscode`` | Visual Studio Code portable | installable |")
+$notes.Add("| Classroom | ``php-mysql-classroom`` | Visual Studio Code portable, Git for Windows portable, XAMPP portable | installable |")
 $notes.Add("")
 $notes.Add("## Included Tools")
 $notes.Add("")
-$notes.Add("| Tool | Version | Install state | Support state | Notes |")
-$notes.Add("|---|---:|---|---|---|")
+$notes.Add("| Tool | Version | State | Support | Notes |")
+$notes.Add("| --- | ---: | --- | --- | --- |")
 foreach ($tool in $tools) {
   $notes.Add("| $($tool.name) | ``$($tool.version)`` | $($tool.installState) | $($tool.supportState) | $($tool.notes) |")
 }
 $notes.Add("")
-$notes.Add("## Release Files")
+$notes.Add("## Release Assets")
 $notes.Add("")
 $notes.Add("- ``$releaseAssetBaseName`` - Windows x64 installer.")
 $notes.Add("- ``$releaseAssetBaseName.sha256`` - SHA256 checksum for the installer.")
 $notes.Add("- ``$releaseManifestFileName`` - machine-readable tool/profile manifest with pinned URLs and hashes.")
 $notes.Add("- ``$releaseChangelogFileName`` - changelog snapshot from this repository.")
 $notes.Add("")
-$notes.Add("The changelog snapshot included in this release is copied from the repository ``CHANGELOG.md``. Automated changelog generation is planned for a future release workflow revision.")
+$notes.Add("## Verification Notes")
+$notes.Add("")
+$notes.Add("- Installer signing is disabled unless production signing is explicitly enabled for the release run.")
+$notes.Add("- The release manifest records the product version, build version, profiles, tools, pinned URLs and SHA256 hashes.")
+$notes.Add("- The attached changelog snapshot is copied from repository ``CHANGELOG.md``.")
+$notes.Add("")
+$notes.Add("Full changelog: see ``$releaseChangelogFileName``.")
 [System.IO.File]::WriteAllText($notesFullPath, (($notes -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
 
 Write-Host "Release manifest written: $outputFullPath"
