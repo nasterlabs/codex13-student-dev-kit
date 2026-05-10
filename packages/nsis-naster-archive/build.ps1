@@ -116,6 +116,30 @@ function Resolve-MSBuild {
   return $null
 }
 
+function Get-Sha256FileHash {
+  param(
+    [Parameter(Mandatory)]
+    [string] $LiteralPath
+  )
+
+  $getFileHash = Get-Command "Get-FileHash" -ErrorAction SilentlyContinue
+  if ($getFileHash) {
+    return (Get-FileHash -Algorithm SHA256 -LiteralPath $LiteralPath).Hash.ToLowerInvariant()
+  }
+
+  $resolvedPath = (Resolve-Path -LiteralPath $LiteralPath).Path
+  $sha256 = [System.Security.Cryptography.SHA256]::Create()
+  $stream = [System.IO.File]::OpenRead($resolvedPath)
+  try {
+    $hashBytes = $sha256.ComputeHash($stream)
+    return ([System.BitConverter]::ToString($hashBytes) -replace "-", "").ToLowerInvariant()
+  }
+  finally {
+    $stream.Dispose()
+    $sha256.Dispose()
+  }
+}
+
 $PluginRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Resolve-Path -LiteralPath (Join-Path $PluginRoot "..\..")
 $ProjectPath = Join-Path $PluginRoot "src\nasterarchive.vcxproj"
@@ -207,7 +231,7 @@ if (-not $NoCopy) {
   Write-Host "Copied plugin to: $InstallerPluginDir"
 
   $relativePluginPath = "plugins/x86-unicode/nasterarchive.dll"
-  $pluginHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $installerPluginPath).Hash.ToLowerInvariant()
+  $pluginHash = Get-Sha256FileHash -LiteralPath $installerPluginPath
   $hashLine = "$pluginHash  $relativePluginPath"
   $hashUpdated = $false
   $hashLines = @()
