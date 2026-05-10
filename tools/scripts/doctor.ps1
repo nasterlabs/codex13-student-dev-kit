@@ -238,11 +238,11 @@ Write-Host ("=" * 40)
 Write-Host ""
 
 $psVer = $PSVersionTable.PSVersion
-if ($psVer.Major -ge 5) {
-  Write-Check "OK" "PowerShell" "$psVer"
+if ($PSVersionTable.PSEdition -eq "Core" -and $psVer.Major -ge 7) {
+  Write-Check "OK" "PowerShell 7" "$psVer"
 }
 else {
-  Write-Check "FAIL" "PowerShell" "5.1+ required; got $psVer"
+  Write-Check "FAIL" "PowerShell 7" "pwsh 7+ required; got $($PSVersionTable.PSEdition) $psVer"
 }
 
 Test-Command -Label "Task runner (go-task)" -Exe "task" -Arguments "--version" -CandidatePaths @(

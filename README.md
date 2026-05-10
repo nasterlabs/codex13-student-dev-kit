@@ -74,7 +74,7 @@ Runtime:
 
 Development/build:
 
-- Windows with PowerShell 5.1 or newer.
+- Windows with PowerShell 7 or newer (`pwsh`).
 - NSIS 3 with `makensis.exe`.
 - Task (`winget install Task.Task`).
 - Visual Studio Build Tools with C++ tools and Windows SDK when rebuilding the
@@ -98,6 +98,12 @@ Install Task:
 
 ```powershell
 winget install Task.Task
+```
+
+Install PowerShell 7 if `pwsh` is not already available:
+
+```powershell
+winget install Microsoft.PowerShell
 ```
 
 Copy `.env.example` to `.env` and set your local `NSIS_PATH`, for example:
@@ -321,7 +327,7 @@ You can also call the Windows wrapper directly:
 .\apps\setup\scripts\build.cmd
 ```
 
-or:
+or, when using the Windows PowerShell fallback explicitly:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\apps\setup\scripts\build.ps1

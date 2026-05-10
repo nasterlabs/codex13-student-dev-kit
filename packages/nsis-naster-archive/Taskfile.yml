@@ -10,16 +10,16 @@ tasks:
     desc: Build the Unicode Win32 NSIS plugin and copy it into the Setup vendor directory
     platforms: [windows]
     cmds:
-      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./build.ps1
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./build.ps1
 
   build:no-copy:
     desc: Build the plugin without copying it into the Setup vendor directory
     platforms: [windows]
     cmds:
-      - powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./build.ps1 -NoCopy
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./build.ps1 -NoCopy
 
   clean:
     desc: Remove package-local build output
     platforms: [windows]
     cmds:
-      - powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -LiteralPath ./bin,./obj -Recurse -Force -ErrorAction SilentlyContinue"
+      - pwsh -NoProfile -ExecutionPolicy Bypass -Command "Remove-Item -LiteralPath ./bin,./obj -Recurse -Force -ErrorAction SilentlyContinue"
