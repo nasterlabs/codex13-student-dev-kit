@@ -96,7 +96,7 @@ jobs:
   dco:
     name: DCO and signed commits
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -104,17 +104,26 @@ jobs:
           fetch-depth: 0
 
       - name: Fetch PR range
+        if: github.event_name == 'pull_request'
         shell: pwsh
         run: |
           git fetch --no-tags origin `
             "+refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}" `
             "+refs/pull/${{ github.event.pull_request.number }}/head:refs/remotes/origin/pr/${{ github.event.pull_request.number }}"
 
-      - name: Validate DCO sign-offs
+      - name: Validate PR commits
+        if: github.event_name == 'pull_request'
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: ./tools/scripts/check-dco.ps1 -From "origin/${{ github.base_ref }}" -To "origin/pr/${{ github.event.pull_request.number }}" -RequireVerifiedSignatures
+
+      - name: Validate pushed commits
+        if: github.event_name == 'push'
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./tools/scripts/check-dco.ps1 -From "${{ github.event.before }}" -To "${{ github.sha }}" -RequireVerifiedSignatures
 
   build:
     name: Build installer
