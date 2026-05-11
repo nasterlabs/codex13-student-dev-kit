@@ -1,10 +1,18 @@
-# Codex 13 Student Dev Kit
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme-header-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/readme-header-light.png">
+  <img src="docs/assets/readme-header-light.png" alt="Codex 13 Student Dev Kit" width="1200" style="min-width: 720px; max-width: 100%;">
+</picture>
 
 [![CI](https://github.com/nasterlabs/codex13-student-dev-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/nasterlabs/codex13-student-dev-kit/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/nasterlabs/codex13-student-dev-kit)
 
-by Naster Labs, the software brand of Luczak Consulting P.S.A.
+An open-source project by **Naster Labs**, the software brand of **Luczak Consulting P.S.A.**
+
+</div>
 
 Codex 13 Student Dev Kit sets up a portable development environment toolkit
 for students, classrooms, workshops and project-based learning in a
@@ -42,7 +50,38 @@ All tools are unpacked under the installation directory and are started through 
 
 Setup is portable-first, not trace-free. It installs the tool payload under the selected installation directory, but it also creates per-user integration needed for a normal Windows installer: HKCU registry entries, an uninstall entry, Start Menu and optional desktop shortcuts, logs, legal files and `codex13-sdk.manifest.json`.
 
-![Installer welcome page](docs/screenshots/installer-welcome.png)
+<p align="center">
+  <img src="docs/screenshots/framed/installer-welcome.png" alt="Installer welcome page" width="1000">
+</p>
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/framed/installer-profile.png" alt="Installer profile selection page">
+      <br>
+      <strong>Profile selection</strong>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/framed/installer-summary.png" alt="Installer summary page">
+      <br>
+      <strong>Install summary</strong>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/framed/installed-folder.png" alt="Installed tool folder in Windows Explorer">
+      <br>
+      <strong>Portable tool folder</strong>
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/framed/vscode-launched.png" alt="Visual Studio Code launched from Codex 13 Student Dev Kit">
+      <br>
+      <strong>Launched VS Code</strong>
+    </td>
+  </tr>
+</table>
 
 ## Status
 

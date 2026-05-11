@@ -18,6 +18,16 @@ fi
 
 mkdir -p "$out" "$tmp"
 
+im_path() {
+  local path="$1"
+
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "$path"
+  else
+    printf '%s' "$path"
+  fi
+}
+
 if [[ ! -f "$signet_src" ]]; then
   echo "Missing source asset: $signet_src" >&2
   exit 1
@@ -40,7 +50,7 @@ render_svg() {
   local size="$2"
   local target="$3"
 
-  "${im[@]}" -background none "$source" -resize "${size}x${size}" "$target"
+  "${im[@]}" -background none "$(im_path "$source")" -resize "${size}x${size}" "$(im_path "$target")"
 }
 
 render_white_signet() {
@@ -50,12 +60,12 @@ render_white_signet() {
   local mask="$tmp/signet-mask-${size}.png"
 
   render_svg "$signet_src" "$size" "$rendered"
-  "${im[@]}" "$rendered" -alpha extract "$mask"
+  "${im[@]}" "$(im_path "$rendered")" -alpha extract "$(im_path "$mask")"
   "${im[@]}" \
     -size "${size}x${size}" xc:"#f8fafc" \
-    "$mask" \
+    "$(im_path "$mask")" \
     -compose copy_opacity -composite \
-    "$target"
+    "$(im_path "$target")"
 }
 
 render_svg "$favicon_work" 256 "$tmp/codex13-favicon-256.png"
@@ -68,27 +78,52 @@ render_svg "$favicon_work" 16 "$tmp/codex13-favicon-16.png"
 render_white_signet 96 "$tmp/codex13-signet-white-96.png"
 
 "${im[@]}" \
-  "$tmp/codex13-favicon-256.png" \
-  "$tmp/codex13-favicon-128.png" \
-  "$tmp/codex13-favicon-64.png" \
-  "$tmp/codex13-favicon-48.png" \
-  "$tmp/codex13-favicon-32.png" \
-  "$tmp/codex13-favicon-16.png" \
-  "$out/codex13-favicon.ico"
+  -size 164x32 xc:none \
+  -font "Segoe-UI-Semibold" \
+  -pointsize 20 \
+  -gravity center \
+  -fill "#fbbf24" \
+  -annotate +0+0 "Codex 13" \
+  "$(im_path "$tmp/codex13-wizard-brand.png")"
+
+"${im[@]}" \
+  -size 164x30 xc:none \
+  -font "Segoe-UI-Semibold" \
+  -pointsize 16 \
+  -gravity center \
+  -fill "#f8fafc" \
+  -annotate +0+0 "Student Dev Kit" \
+  "$(im_path "$tmp/codex13-wizard-title.png")"
+
+"${im[@]}" \
+  -size 64x1 xc:"#f59e0b" \
+  "$(im_path "$tmp/codex13-wizard-rule.png")"
+
+"${im[@]}" \
+  "$(im_path "$tmp/codex13-favicon-256.png")" \
+  "$(im_path "$tmp/codex13-favicon-128.png")" \
+  "$(im_path "$tmp/codex13-favicon-64.png")" \
+  "$(im_path "$tmp/codex13-favicon-48.png")" \
+  "$(im_path "$tmp/codex13-favicon-32.png")" \
+  "$(im_path "$tmp/codex13-favicon-16.png")" \
+  "$(im_path "$out/codex13-favicon.ico")"
 
 cp "$out/codex13-favicon.ico" "$out/codex13.ico"
 cp "$out/codex13-favicon.ico" "$root/assets/brand/codex13-favicon.ico"
 
 "${im[@]}" \
   -size 150x57 xc:"#ffffff" \
-  "$tmp/codex13-favicon-48.png" -geometry 42x42+96+7 -composite \
-  BMP3:"$out/codex13-header.bmp"
+  "$(im_path "$tmp/codex13-favicon-48.png")" -geometry 42x42+96+7 -composite \
+  BMP3:"$(im_path "$out/codex13-header.bmp")"
 
 "${im[@]}" \
   -size 164x314 xc:"#111827" \
   \( -size 164x314 gradient:"#162033-#111827" \) -compose overlay -composite \
   -compose over \
-  "$tmp/codex13-signet-white-96.png" -geometry 96x96+34+132 -composite \
-  BMP3:"$out/codex13-wizard.bmp"
+  "$(im_path "$tmp/codex13-signet-white-96.png")" -geometry 96x96+34+68 -composite \
+  "$(im_path "$tmp/codex13-wizard-brand.png")" -geometry 164x32+0+176 -composite \
+  "$(im_path "$tmp/codex13-wizard-rule.png")" -geometry 64x1+50+205 -composite \
+  "$(im_path "$tmp/codex13-wizard-title.png")" -geometry 164x30+0+214 -composite \
+  BMP3:"$(im_path "$out/codex13-wizard.bmp")"
 
 echo "Generated NSIS assets in $out"
