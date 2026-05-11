@@ -146,6 +146,15 @@ Run repository checks:
 task check
 ```
 
+Pull request descriptions must follow `.github/PULL_REQUEST_TEMPLATE.md`.
+`## ✅ Verification` uses checklist items; mark commands that were actually run
+with `[x]` and wrap commands such as `task check` or `git diff --check` in
+backticks. Leave checklist items unchecked when a check was intentionally not
+run, for example a manual installer smoke test on a documentation-only change.
+Keep `## 📝 Notes` in the body so reviewers can see whether encoding, generated
+files, documentation and DCO considerations were checked, not applicable, or not
+reviewed for that change.
+
 Build the installer using `.env`:
 
 ```powershell

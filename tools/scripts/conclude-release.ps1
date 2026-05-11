@@ -147,17 +147,29 @@ if ($OpenPullRequest) {
     throw "git push failed."
   }
 
+  $summaryIcon = [char]::ConvertFromUtf32(0x1F9ED)
+  $verificationIcon = [char]::ConvertFromUtf32(0x2705)
+  $notesIcon = [char]::ConvertFromUtf32(0x1F4DD)
+
   $pullRequestBody = @"
-## Summary
+## $summaryIcon Summary
 
 - prepare $normalizedTag release metadata
 - update versioned release files
 - add the edited changelog entry for $normalizedTag
 
-## Verification
+## $verificationIcon Verification
 
-- task check
-- git diff --check
+- [x] `task check`
+- [x] `git diff --check`
+- [ ] Manual installer smoke test when install, update or uninstall behavior changed
+
+## $notesIcon Notes
+
+- [x] Preserved UTF-8 encoding for NSIS files.
+- [x] Did not commit downloaded archives, cache folders, payload logs, `.env`, `.build`, `dist`, `node_modules`, or native `bin`/`obj` output.
+- [x] Updated documentation, release notes, changelog placeholders or workflow docs when needed.
+- [x] Commits are signed off for DCO.
 "@
 
   & gh pr create `
