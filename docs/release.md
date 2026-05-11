@@ -32,13 +32,38 @@ This version is rejected until `APP_VERSION` is updated to `0.7.1` in
 v0.7.1-alpha.1
 ```
 
-Before starting a new release line:
+Before starting a release PR, create a release branch and prepare the mechanical
+version/changelog changes:
 
-1. Update `APP_VERSION` in `apps/setup/src/nsis/config.nsh`.
-2. Update related release metadata and documentation in the same branch.
-3. Merge the version bump to `main`.
-4. Create the `v<semver>` tag from that merged commit.
-5. Run the release workflow from the tag.
+```powershell
+task release:prepare TAG=v0.7.0-alpha.1
+```
+
+This creates `release/v0.7.0-alpha.1` from `origin/main`, updates
+`APP_VERSION` in `apps/setup/src/nsis/config.nsh`, updates `package.json`, and
+inserts a generated changelog section after the
+`<!-- New release entries go here -->` marker.
+
+After that:
+
+1. Manually edit the generated `CHANGELOG.md` section.
+2. Remove the temporary release-description and highlight edit markers.
+3. Review version changes and any related documentation.
+4. Conclude the release branch:
+
+   ```powershell
+   task release:conclude TAG=v0.7.0-alpha.1
+   ```
+
+   Add `OPEN_PR=1` to push the branch and open the PR with GitHub CLI:
+
+   ```powershell
+   task release:conclude TAG=v0.7.0-alpha.1 OPEN_PR=1
+   ```
+
+`release:conclude` validates `package.json`, `APP_VERSION`, and the changelog
+markers, runs repository checks, then commits the branch as
+`chore(release): prepare v<semver>`.
 
 The release workflow validates this before the expensive release build job. If
 the version core does not match `APP_VERSION`, the run fails in
@@ -60,6 +85,81 @@ These first alpha releases are intended to be stable enough for release
 validation, but they also validate the GitHub release workflow, artifacts,
 checksums and public release notes. Until Authenticode signing for the EXE is
 resolved, public releases remain alpha releases.
+
+## Release PR and Tagging
+
+Release preparation happens in a `release/v<semver>` branch and a normal GitHub
+Flow pull request. The release PR is the place to review generated changelog
+text, version bumps and release metadata before anything is tagged.
+
+The release commit subject must be:
+
+```text
+chore(release): prepare vX.Y.Z
+```
+
+For example:
+
+```text
+chore(release): prepare v0.7.0-alpha.1
+```
+
+After the release PR is merged to `main`, `.github/workflows/tag-release.yml`
+runs on the closed pull request event. It only continues for merged PRs whose
+source branch starts with `release/`, validates the release state, and creates an
+annotated `vX.Y.Z` tag on the merge commit. The tag push then starts
+`.github/workflows/release.yml`, which builds and publishes the GitHub Release.
+
+The tag workflow validates that:
+
+- the release PR source branch matches `release/v<semver>`,
+- `package.json` has the same full SemVer version,
+- `APP_VERSION` matches the release version core,
+- `CHANGELOG.md` contains a section for that version,
+- the tag does not already exist.
+
+The tag workflow creates a GitHub App installation token with
+`actions/create-github-app-token`. Configure repository variable
+`APP_CLIENT_ID` and repository secret `APP_PRIVATE_KEY` for an app installation
+that can write repository contents. Do not use the workflow `GITHUB_TOKEN` for
+this job: GitHub does not start new `push` workflow runs from tags pushed by
+`GITHUB_TOKEN`, so the release workflow would not start automatically.
+
+## Changelog Preparation
+
+`CHANGELOG.md` is generated before the release PR and then reviewed like any
+other source file. The generator prepares the first draft; humans may edit the
+wording, remove noise, add context or regroup entries before merge.
+
+Preview the generated changelog section:
+
+```powershell
+pnpm changelog --tag v0.7.0-alpha.1
+```
+
+Prepare a release changelog section by inserting it into `CHANGELOG.md`:
+
+```powershell
+pnpm changelog:write --tag v0.7.0-alpha.1
+```
+
+The `--tag` value controls the generated section heading. For example,
+`--tag v0.7.0-alpha.1` produces `## [0.7.0-alpha.1] - <date>` instead of
+`## [Unreleased]`. The changelog write command inserts the generated section
+immediately after the `<!-- New release entries go here -->` marker, leaving the
+existing changelog body below it intact. If the same version already exists in
+`CHANGELOG.md`, update that section manually instead of running the insertion
+command again.
+
+The changelog generator is `git-cliff`, configured in `.git-cliff.toml` for
+Conventional Commits. The committed `CHANGELOG.md` remains the source that is
+reviewed in the release PR.
+
+The full release branch helper wraps this changelog command:
+
+```powershell
+task release:prepare TAG=v0.7.0-alpha.1
+```
 
 ## Local Release Build
 
@@ -90,13 +190,13 @@ The release workflow:
 2. rebuilds `nasterarchive.dll` on Windows,
 3. builds the installer on Windows,
 4. leaves signing disabled by default for the current alpha line,
-5. generates SHA256 checksums,
-6. generates `codex13-sdk-<version>.release-manifest.json`,
-7. copies `CHANGELOG.md` to `codex13-sdk-<version>.changelog.md`,
-8. uploads installer, checksum, release manifest, release notes and changelog
-   files to the workflow artifact,
-9. publishes the same installer, checksum, release manifest and changelog files
-   to a GitHub Release when the run is allowed to publish one.
+5. generates GitHub changelog notes from merged pull requests,
+6. generates `codex13-sdk_<version>_release_manifest.json`,
+7. generates one `codex13-sdk_<version>_checksums.txt` file for release assets,
+8. uploads installer, checksums, release manifest and release notes to the
+   workflow artifact,
+9. publishes installer, checksums and release manifest to a GitHub Release when
+   the run is allowed to publish one.
 
 On tag builds, the workflow derives `BUILD_VERSION` from the tag name. Manual
 workflow dispatch can use an explicit test version such as
@@ -105,28 +205,30 @@ workflow dispatch can use an explicit test version such as
 
 ## Release Manifest
 
-Every release publishes `codex13-sdk-<version>.release-manifest.json` next to
-the installer, SHA256 checksum and `codex13-sdk-<version>.changelog.md`. The
-release manifest is generated from `apps/setup/src/nsis/config.nsh`, so pinned
-tool versions, download URLs and SHA256 values stay aligned with the installer
-source.
+Every release publishes `codex13-sdk_<version>_release_manifest.json` next to
+the installer and one SHA256 checksum file covering all uploaded release
+assets. The release manifest is generated from `apps/setup/src/nsis/config.nsh`,
+so pinned tool versions, download URLs and SHA256 values stay aligned with the
+installer source.
 
 The manifest records:
 
 - product and build version,
-- installable profiles and their selected tool sets,
+- Setup installer profiles and their selected tool sets,
 - installable/supported tools for the current release,
+- uploaded release asset metadata,
 - pinned metadata for planned-but-hidden tools such as OpenSSH.
 
-The release workflow also generates `Codex13SDK.release-notes.md` from the same
-data and uses it as the GitHub Release body. This keeps the visible release
-description aligned with the uploaded machine-readable manifest. The notes file
-is uploaded as a workflow artifact for troubleshooting.
+The release workflow also generates
+`codex13-sdk_<version>_release_notes.md` from the release manifest and the
+reviewed `CHANGELOG.md` entry for the release. The visible release description
+and highlights come from `CHANGELOG.md`; profile, tool and asset tables come
+from the manifest. The notes file is uploaded as a workflow artifact for
+troubleshooting and used as the GitHub Release body.
 
-The release changelog is copied from `CHANGELOG.md` into
-`codex13-sdk-<version>.changelog.md`. The changelog is currently maintained
-manually; it is not generated by Changesets, semantic-release or
-conventional-changelog yet.
+GitHub-generated notes are still produced during the workflow as a fallback and
+diagnostic input, but the repository `CHANGELOG.md` remains the manually
+reviewable changelog prepared in the release PR.
 
 ## Citation and Archive Metadata
 

@@ -163,7 +163,7 @@ $codemeta = Read-Utf8Text -Path $codemetaPath | ConvertFrom-Json
 $codemeta.version = $BuildVersion
 $codemeta.datePublished = $ReleaseDate
 $codemeta.downloadUrl = $ReleaseUrl
-$codemeta.releaseNotes = "Release metadata for Codex 13 Student Dev Kit $BuildVersion. See the GitHub Release for installer artifacts, checksums, manifest and changelog."
+$codemeta.releaseNotes = "Release metadata for Codex 13 Student Dev Kit $BuildVersion. See the GitHub Release for installer artifacts, checksums, release notes and manifest."
 Write-Utf8NoBom -Path $codemetaPath -Content ((ConvertTo-PrettyJson -Value $codemeta) + "`n")
 
 Write-Host "Updated CITATION.cff, .zenodo.json and codemeta.json for $BuildVersion ($Commit)."

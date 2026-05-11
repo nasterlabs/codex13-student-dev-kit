@@ -1,0 +1,115 @@
+name: Tag release
+# cspell: words appid pipefail
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  tag:
+    name: Create release tag
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/')
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b # v3.2.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout merged release commit
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Setup Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24.15.0
+
+      - name: Validate release state
+        id: release
+        shell: bash
+        env:
+          RELEASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+
+          semver_core='(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?'
+
+          if [[ ! "$RELEASE_BRANCH" =~ ^release/(v${semver_core})$ ]]; then
+            echo "Release branch must match: release/v<semver>"
+            echo "Actual: $RELEASE_BRANCH"
+            exit 1
+          fi
+
+          tag="${BASH_REMATCH[1]}"
+          version="${tag#v}"
+          subject="$(git log -1 --format=%s)"
+          package_version="$(node -p "require('./package.json').version")"
+          app_version="$(node -e "const fs=require('node:fs'); const config=fs.readFileSync('apps/setup/src/nsis/config.nsh','utf8'); const match=config.match(/^\\s*!define\\s+APP_VERSION\\s+\"([^\"]+)\"/m); if (!match) process.exit(1); process.stdout.write(match[1]);")"
+          version_core="${version%%[-+]*}"
+
+          if [[ "$package_version" != "$version" ]]; then
+            echo "package.json version ($package_version) must match release tag version ($version)."
+            exit 1
+          fi
+
+          if [[ "$app_version" != "$version_core" ]]; then
+            echo "APP_VERSION ($app_version) must match release version core ($version_core)."
+            exit 1
+          fi
+
+          if ! grep -Eq "^## .*\[$version\]" CHANGELOG.md; then
+            echo "CHANGELOG.md must contain a section for $version."
+            exit 1
+          fi
+
+          if [[ "$subject" != "chore(release): prepare $tag" && "$subject" != "Merge pull request"* ]]; then
+            echo "Release merge commit subject should be the release commit or a GitHub merge commit."
+            echo "Actual: $subject"
+            exit 1
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check tag does not exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --tags
+
+          if git rev-parse "${{ steps.release.outputs.tag }}" >/dev/null 2>&1; then
+            echo "Tag ${{ steps.release.outputs.tag }} already exists."
+            exit 1
+          fi
+
+      - name: Create and push tag
+        shell: bash
+        env:
+          GH_APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "nasterlabs-release-bot[bot]"
+          git config user.email "nasterlabs-release-bot[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git tag -a "${{ steps.release.outputs.tag }}" -m "${{ steps.release.outputs.tag }}"
+          git push origin "${{ steps.release.outputs.tag }}"
