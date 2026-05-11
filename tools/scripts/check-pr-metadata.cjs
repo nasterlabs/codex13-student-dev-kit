@@ -1,11 +1,15 @@
 const allowedBranchPattern =
   /^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)\/[a-z0-9][a-z0-9._-]*$/;
 const allowedBotBranchPattern = /^(dependabot|renovate)\//;
+const allowedDependencyBotAuthors = new Set(['dependabot[bot]', 'renovate[bot]']);
 
+const author = (process.env.PR_AUTHOR || '').trim();
 const headRef = (process.env.PR_HEAD_REF || '').trim();
 const body = process.env.PR_BODY || '';
 
 const errors = [];
+const isDependencyBotPr =
+  allowedBotBranchPattern.test(headRef) && allowedDependencyBotAuthors.has(author);
 
 if (!headRef) {
   errors.push('Missing PR_HEAD_REF.');
@@ -21,6 +25,11 @@ if (!headRef) {
 const normalizedBody = body.replace(/\r\n/g, '\n').trim();
 if (!normalizedBody) {
   errors.push('Pull request body must not be empty.');
+}
+
+if (isDependencyBotPr && normalizedBody) {
+  console.log('Dependency bot PR metadata check passed.');
+  process.exit(0);
 }
 
 function getSection(text, heading) {

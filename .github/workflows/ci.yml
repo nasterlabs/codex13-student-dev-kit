@@ -87,6 +87,7 @@ jobs:
 
       - name: Validate PR branch and body
         env:
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
           PR_BODY: ${{ github.event.pull_request.body }}
         run: node tools/scripts/check-pr-metadata.cjs
