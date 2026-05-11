@@ -69,6 +69,44 @@ The release workflow validates this before the expensive release build job. If
 the version core does not match `APP_VERSION`, the run fails in
 `Pre-release checks` and links back to this section.
 
+## Failed Alpha Release Recovery
+
+Alpha suffixes are intentionally monotonic. If a release PR was merged but the
+tag or release workflow failed before publishing a GitHub Release, do not reuse
+the same tag. Prepare the next alpha number instead.
+
+For example, if `v0.7.0-alpha.1` was merged to `main` but no tag and no GitHub
+Release were published, recover with:
+
+```powershell
+task release:retry TAG=v0.7.0-alpha.2 SUPERSEDE_TAG=v0.7.0-alpha.1
+```
+
+This creates `release/v0.7.0-alpha.2` from `origin/main`, updates versioned
+files, and moves the existing changelog section from the failed tag to the
+new tag. It does not add a second copy of the changelog entry, so the next
+published release reads as if the failed alpha was never released. The helper
+also prints commits that landed after the failed release-preparation commit so
+you can decide whether any release-process fix should be mentioned in the
+updated changelog entry.
+
+After the retry branch is created:
+
+1. Review the updated changelog section.
+2. Add a short note for any release-process fix that materially changes the
+   published artifacts.
+3. Remove any temporary edit markers that remain.
+4. Conclude and open the release PR:
+
+   ```powershell
+   task release:conclude TAG=v0.7.0-alpha.2 OPEN_PR=1
+   ```
+
+If a tag exists but the GitHub Release failed, inspect the failed run before
+choosing the recovery path. A published tag is immutable release history; prefer
+fixing the release workflow and publishing from the existing tag only when the
+artifacts were not published and the tag points to the intended commit.
+
 The first public release line uses a numeric alpha build suffix:
 
 ```text
@@ -117,6 +155,22 @@ The tag workflow validates that:
 - `APP_VERSION` matches the release version core,
 - `CHANGELOG.md` contains a section for that version,
 - the tag does not already exist.
+
+It does not validate the merge commit subject. GitHub can rewrite that subject
+depending on whether the PR was merged with a merge commit, squash merge or
+rebase merge, while the release branch name and versioned files are the actual
+release state.
+
+To validate the tag workflow without creating a tag, run the `Tag release`
+workflow manually with `dry_run` enabled. Use the release branch name and the
+commit or branch to validate. The default manual mode validates and stops before
+the tag creation step.
+
+Local validation uses the same release-state checker:
+
+```powershell
+task release:check-state RELEASE_BRANCH=release/v0.7.0-alpha.1
+```
 
 The tag workflow creates a GitHub App installation token with
 `actions/create-github-app-token`. Configure repository variable
