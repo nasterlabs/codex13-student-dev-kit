@@ -383,10 +383,15 @@ Release build notes are in `docs/release.md`.
 ## License
 
 The main Codex 13 Student Dev Kit project code is licensed under the Apache
-License 2.0. Some files are intentionally under different terms, including the
-MIT-licensed NSIS Naster Archive package and the GPL-2.0-only XAMPP patch set.
-The authoritative per-path license mapping is maintained in `.reuse/dep5`;
-third-party details are summarized in `docs/third-party.md`.
+License 2.0. The root `LICENSE` file applies to repository content except where
+`.reuse/dep5` records a more specific per-path license.
+
+Some files are intentionally under different terms, including the MIT-licensed
+NSIS Naster Archive package and the GPL-2.0-only XAMPP patch set. The installer
+also downloads third-party tools such as Visual Studio Code, Git for Windows and
+XAMPP; those tools are not relicensed by this project and remain governed by
+their own upstream license terms and notices. Third-party details are summarized
+in `docs/third-party.md`.
 
 ## Contributing And Security
 

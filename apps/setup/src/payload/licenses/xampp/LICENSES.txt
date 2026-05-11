@@ -12,10 +12,11 @@ Source URL configured in Setup:
 XAMPP is a free, open source, cross-platform web server package developed and
 distributed by Apache Friends (https://www.apachefriends.org/).
 
-XAMPP bundles many independent open source components. Each component is
-governed by its own license terms; XAMPP should not be described as having a
-single license. The 8.2.12 Windows portable archive includes a full upstream
-license tree at:
+Apache Friends publishes the XAMPP compilation under the terms of the GNU
+General Public Licence. XAMPP also bundles many independent open source
+components, and each bundled component remains governed by its own license
+terms. The 8.2.12 Windows portable archive includes a full upstream license
+tree at:
 
   xampp\licenses\
 

@@ -6,8 +6,12 @@ can build reproducibly.
 The main project code is licensed as Apache License 2.0 (`Apache-2.0`), with
 per-path exceptions recorded in `.reuse/dep5`. In particular, the
 upstream-derived XAMPP patch set is kept as `GPL-2.0-only` and separate from the
-Apache-2.0 installer code. Vendored and downloaded third-party components remain
-governed by their own license terms.
+Apache-2.0 installer code.
+
+The root `LICENSE` file describes the default license for this repository. It
+does not relicense vendored binaries, upstream-derived patches, or tools that
+Setup downloads during installation. Those components remain governed by their
+own upstream license terms, notices and source-offer obligations.
 
 ## Vendored In Repository
 
@@ -51,7 +55,7 @@ Update procedures for vendored binaries are documented in
 | --- | --- | --- | --- |
 | Visual Studio Code portable | pinned in `apps/setup/src/nsis/config.nsh` | `VSCODE_*` defines | Microsoft Software License Terms for the Microsoft binary; Code - OSS source is MIT; third-party notices in `apps/setup/src/payload/licenses/vscode/NOTICE.txt` |
 | Git for Windows portable | pinned in `apps/setup/src/nsis/config.nsh` | `GIT_*` defines | Git is GPL v2 with compatible per-file licenses; the Git for Windows bundle also includes Bash, zlib, curl, Tcl/Tk, Perl, MSYS2, GNU utilities and other components under their own terms |
-| XAMPP portable | pinned in `apps/setup/src/nsis/config.nsh` | `XAMPP_*` defines | Multi-component bundle; includes Apache-2.0, GPL-2.0, PHP-3.01, Artistic/GPL and other component licenses; full upstream license tree is installed under `tools\xampp\licenses` |
+| XAMPP portable | pinned in `apps/setup/src/nsis/config.nsh` | `XAMPP_*` defines | Apache Friends publishes the XAMPP compilation under GPL terms; each bundled component keeps its own license. The bundle includes Apache-2.0, GPL-2.0, PHP-3.01, Artistic/GPL and other component licenses; the full upstream license tree is installed under `tools\xampp\licenses` |
 
 ## Planned Downloaded Components
 

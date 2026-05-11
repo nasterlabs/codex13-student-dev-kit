@@ -211,6 +211,27 @@ function Assert-VersionConsistency {
   }
 }
 
+function Assert-ApacheLicenseText {
+  $expectedApacheLicenseSha256 = "CFC7749B96F63BD31C3C42B5C471BF756814053E847C10F3EB003417BC523D30"
+
+  foreach ($relativePath in @(
+    "LICENSE",
+    "LICENSES/Apache-2.0.txt",
+    "apps/setup/src/payload/legal/LICENSE.txt",
+    "apps/setup/src/payload/licenses/codex13-student-dev-kit/LICENSE.txt"
+  )) {
+    $path = Join-Path $Root $relativePath
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+      continue
+    }
+
+    $actualHash = (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
+    if ($actualHash -ne $expectedApacheLicenseSha256) {
+      Add-Failure "$relativePath must match the official Apache License 2.0 text."
+    }
+  }
+}
+
 function Assert-ReleaseConcludeAutomation {
   $releaseScriptPath = "tools/scripts/conclude-release.ps1"
   $releaseScriptText = Get-FileText -RelativePath $releaseScriptPath
@@ -310,6 +331,8 @@ $requiredFiles = @(
   "LICENSES/GPL-2.0-only.txt",
   "LICENSES/LicenseRef-third-party-vendored.txt",
   "LICENSES/LicenseRef-xampp-patch.txt",
+  "LICENSES/MIT.txt",
+  "LICENSES/Zlib.txt",
   "docs/development.md",
   "docs/release.md",
   "docs/setup/manifest.md",
@@ -337,6 +360,10 @@ $requiredFiles = @(
   "apps/setup/src/patches/xampp/root/install/diagnose-php-extensions.php",
   "apps/setup/src/patches/xampp/root/install/verify-xampp-paths.php",
   "apps/setup/src/patches/xampp/root/install/verify-xampp-runtime.php",
+  "apps/setup/src/payload/legal/LICENSE.txt",
+  "apps/setup/src/payload/legal/NOTICE.txt",
+  "apps/setup/src/payload/legal/THIRD-PARTY-NOTICES.txt",
+  "apps/setup/src/payload/licenses/codex13-student-dev-kit/LICENSE.txt",
   "apps/setup/src/payload/licenses/git/LICENSE.txt",
   "apps/setup/src/payload/licenses/openssh/LICENSE.txt",
   "apps/setup/src/payload/licenses/openssh/NOTICE.txt",
@@ -405,6 +432,7 @@ if ($textFiles.Count -gt 0) {
   Assert-DocsLinks -RelativePaths $textFiles
 }
 Assert-VersionConsistency
+Assert-ApacheLicenseText
 Assert-ReleaseConcludeAutomation
 
 $unexpectedPayloadFiles = @(
