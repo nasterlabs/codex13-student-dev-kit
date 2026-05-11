@@ -16,9 +16,9 @@ configured.
 
 <!-- New release entries go here -->
 
-<!-- BEGIN RELEASE v0.7.0-alpha.2 -->
+<!-- BEGIN RELEASE v0.7.0-alpha.3 -->
 
-## 🚀 [0.7.0-alpha.2](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.2) - 2026-05-11
+## 🚀 [0.7.0-alpha.3](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.3) - 2026-05-11
 
 This alpha release establishes the first public release baseline for Codex 13
 Student Dev Kit. It focuses on making the Setup installer releasable through
@@ -75,6 +75,8 @@ versioned release artifacts with clear changelog and metadata output.
 ### 🏗️ Build, CI and Release Automation
 
 #### Release Automation
+
+- Gate release tagging on main checks by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#41](https://github.com/nasterlabs/codex13-student-dev-kit/pull/41).
 
 - Support failed alpha release retries by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#39](https://github.com/nasterlabs/codex13-student-dev-kit/pull/39).
 
@@ -160,6 +162,6 @@ _No production dependency updates._
 
 ### 📦 Release Assets
 
-- GitHub Release: [`v0.7.0-alpha.2`](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.2)
+- GitHub Release: [`v0.7.0-alpha.3`](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.3)
 
-<!-- END RELEASE v0.7.0-alpha.2 -->
+<!-- END RELEASE v0.7.0-alpha.3 -->
