@@ -146,6 +146,13 @@ Run repository checks:
 task check
 ```
 
+Pull request CI validates DCO trailers and verified signatures on the commits in
+the pull request branch before merge. Push CI on `main` still verifies commit
+signatures, but it does not require a DCO trailer on the final GitHub-created
+merge or squash commit. This keeps GitHub's "pull request title and description"
+default merge message compatible with the project while preserving DCO checks at
+the reviewed pull request boundary.
+
 Build the installer using `.env`:
 
 ```powershell

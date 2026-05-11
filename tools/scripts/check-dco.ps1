@@ -1,7 +1,8 @@
 param(
   [string] $From = "main",
   [string] $To = "HEAD",
-  [switch] $RequireVerifiedSignatures
+  [switch] $RequireVerifiedSignatures,
+  [switch] $SkipDcoTrailers
 )
 
 $ErrorActionPreference = "Stop"
@@ -210,7 +211,10 @@ foreach ($commit in $commits) {
     throw "git log failed for commit $commit"
   }
 
-  if (($body -join "`n") -notmatch "(?mi)^Signed-off-by:\s+.+\s+<[^>]+>\s*$") {
+  if ($SkipDcoTrailers) {
+    Write-Host "Skipping DCO trailer check for $commit."
+  }
+  elseif (($body -join "`n") -notmatch "(?mi)^Signed-off-by:\s+.+\s+<[^>]+>\s*$") {
     $global:LASTEXITCODE = 0
     $subject = & $GitCommand -C $Root log -1 --format=%s $commit
     Write-Error "Missing DCO Signed-off-by trailer: $commit $subject" -ErrorAction Continue
@@ -234,8 +238,18 @@ if ($failed) {
 }
 
 if ($RequireVerifiedSignatures) {
-  Write-Host "DCO and signature checks passed for $range."
+  if ($SkipDcoTrailers) {
+    Write-Host "Signature checks passed for $range. DCO trailer checks were skipped."
+  }
+  else {
+    Write-Host "DCO and signature checks passed for $range."
+  }
 }
 else {
-  Write-Host "DCO check passed for $range."
+  if ($SkipDcoTrailers) {
+    Write-Host "DCO trailer checks skipped for $range."
+  }
+  else {
+    Write-Host "DCO check passed for $range."
+  }
 }

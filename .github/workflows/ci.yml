@@ -167,7 +167,7 @@ jobs:
         shell: pwsh
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./tools/scripts/check-dco.ps1 -From "${{ github.event.before }}" -To "${{ github.sha }}" -RequireVerifiedSignatures
+        run: ./tools/scripts/check-dco.ps1 -From "${{ github.event.before }}" -To "${{ github.sha }}" -RequireVerifiedSignatures -SkipDcoTrailers
 
   build:
     name: Build installer
