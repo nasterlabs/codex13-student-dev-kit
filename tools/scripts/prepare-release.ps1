@@ -78,7 +78,8 @@ if (-not $NoBranch) {
 $packagePath = Join-Path $Root "package.json"
 $package = [System.IO.File]::ReadAllText($packagePath, $utf8NoBom) | ConvertFrom-Json
 $package.version = $version
-Write-Utf8NoBom -Path $packagePath -Content (($package | ConvertTo-Json -Depth 20) + "`n")
+$packageJson = (($package | ConvertTo-Json -Depth 20) -replace "`r`n", "`n") -replace "`r", "`n"
+Write-Utf8NoBom -Path $packagePath -Content "$packageJson`n"
 
 $configPath = Join-Path $Root "apps/setup/src/nsis/config.nsh"
 $configText = [System.IO.File]::ReadAllText($configPath, $utf8NoBom)

@@ -55,6 +55,7 @@ _No changes in this category._
 {% set_global has_actions = false %}
 {% for commit in deps %}
 {% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set title = title | split(pat=" in the ") | first | split(pat=" across ") | first %}
 {% set_global is_action = false %}
 {% if title is containing("actions/") %}{% set_global is_action = true %}{% endif %}
 {% if title is containing("action-") %}{% set_global is_action = true %}{% endif %}
@@ -74,6 +75,7 @@ _No GitHub Actions dependency updates._
 {% set_global has_prod = false %}
 {% for commit in deps %}
 {% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set title = title | split(pat=" in the ") | first | split(pat=" across ") | first %}
 {% set_global is_action = false %}
 {% if title is containing("actions/") %}{% set_global is_action = true %}{% endif %}
 {% if title is containing("action-") %}{% set_global is_action = true %}{% endif %}
@@ -95,6 +97,7 @@ _No developer tooling dependency updates._
 {% else %}
 {% for commit in deps_dev %}
 {% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set title = title | split(pat=" in the ") | first | split(pat=" across ") | first %}
 - Updated `{{ title | replace(from="Bump ", to="") | replace(from="bump ", to="") | replace(from=" from ", to="` from `") | replace(from=" to ", to="` to `") }}` by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
 {% endfor %}
 {% endif %}

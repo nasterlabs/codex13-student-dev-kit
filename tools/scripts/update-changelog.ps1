@@ -18,6 +18,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $Marker = "<!-- New release entries go here -->"
+$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+$OutputEncoding = $utf8NoBom
+[Console]::InputEncoding = $utf8NoBom
+[Console]::OutputEncoding = $utf8NoBom
 
 function Resolve-RepoPath {
   param([Parameter(Mandatory = $true)][string] $Path)
@@ -137,7 +142,6 @@ if (-not (Test-Path -LiteralPath $resolvedChangelogPath)) {
   throw "Changelog not found: $resolvedChangelogPath"
 }
 
-$utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $current = [System.IO.File]::ReadAllText($resolvedChangelogPath, $utf8NoBom)
 $current = ConvertTo-NormalizedNewlines -Text $current
 
