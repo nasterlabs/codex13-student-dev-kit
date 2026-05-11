@@ -59,8 +59,18 @@ tasks:
     platforms: [windows]
     vars:
       TAG: '{{.TAG | default ""}}'
+      SUPERSEDE_TAG: '{{.SUPERSEDE_TAG | default ""}}'
     cmds:
-      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/prepare-release.ps1 -Tag "{{.TAG}}"
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/prepare-release.ps1 -Tag "{{.TAG}}" {{if ne .SUPERSEDE_TAG ""}}-SupersedeTag "{{.SUPERSEDE_TAG}}"{{end}}
+
+  release:retry:
+    desc: Prepare a follow-up alpha release after a failed tag/build; pass TAG=v0.7.0-alpha.2 SUPERSEDE_TAG=v0.7.0-alpha.1
+    platforms: [windows]
+    vars:
+      TAG: '{{.TAG | default ""}}'
+      SUPERSEDE_TAG: '{{.SUPERSEDE_TAG | default ""}}'
+    cmds:
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/prepare-release.ps1 -Tag "{{.TAG}}" -SupersedeTag "{{.SUPERSEDE_TAG}}"
 
   release:conclude:
     desc: Validate edited release notes, run checks, commit release prep and optionally open a PR; pass TAG=v0.7.0-alpha.1 OPEN_PR=1 or omit TAG for prompt
@@ -71,6 +81,13 @@ tasks:
       SKIP_CHECKS: '{{.SKIP_CHECKS | default "0"}}'
     cmds:
       - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/conclude-release.ps1 -Tag "{{.TAG}}" {{if eq .OPEN_PR "1"}}-OpenPullRequest{{end}} {{if eq .SKIP_CHECKS "1"}}-SkipChecks{{end}}
+
+  release:check-state:
+    desc: Validate release branch state without creating a tag; pass RELEASE_BRANCH=release/v0.7.0-alpha.1
+    vars:
+      RELEASE_BRANCH: '{{.RELEASE_BRANCH | default ""}}'
+    cmds:
+      - node ./tools/scripts/check-release-state.cjs --release-branch "{{.RELEASE_BRANCH}}"
 
   build:nsis-naster-archive:
     desc: Build and copy the Naster Archive NSIS plugin
