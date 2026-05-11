@@ -81,7 +81,9 @@ function Update-SupersededChangelogSection {
     [string] $OldTag,
 
     [Parameter(Mandatory = $true)]
-    [string] $NewTag
+    [string] $NewTag,
+
+    [string] $FollowUpSection = ""
   )
 
   $changelogPath = Join-Path $Root "CHANGELOG.md"
@@ -114,8 +116,72 @@ function Update-SupersededChangelogSection {
   $section = $section.Replace("[``$oldVersion``]", "[``$newVersion``]")
   $section = $section.Replace("``$OldTag``", "``$NewTag``")
 
+  if (-not [string]::IsNullOrWhiteSpace($FollowUpSection)) {
+    $releaseAssetsPattern = '(?m)^###\s+.*Release Assets\s*$'
+    $releaseAssetsMatch = [regex]::Match($section, $releaseAssetsPattern)
+    if (-not $releaseAssetsMatch.Success) {
+      throw "Cannot insert retry follow-up changes because the moved changelog section does not contain a Release Assets heading."
+    }
+
+    $retryBlock = @(
+      "<!-- BEGIN RELEASE RETRY FOLLOW-UP $OldTag -->",
+      $FollowUpSection.Trim(),
+      "",
+      "<!-- END RELEASE RETRY FOLLOW-UP $OldTag -->",
+      ""
+    ) -join "`n"
+
+    $section = $section.Insert($releaseAssetsMatch.Index, "$retryBlock`n")
+  }
+
   $updated = $changelog.Substring(0, $startIndex) + $section + $changelog.Substring($sectionEndIndex)
   Write-Utf8NoBom -Path $changelogPath -Content $updated
+}
+
+function Get-GeneratedRetryFollowUpSection {
+  param([Parameter(Mandatory = $true)][string] $Tag)
+
+  $env:GIT_CLIFF_INCLUDE_EMPTY_SECTIONS = "0"
+  $preview = @(
+    & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "tools/scripts/update-changelog.ps1") -Tag $Tag -Preview
+  )
+  if ($LASTEXITCODE -ne 0) {
+    throw "Changelog retry follow-up generation failed."
+  }
+
+  $previewText = ConvertTo-NormalizedNewlines -Text ($preview -join "`n")
+  $lines = @($previewText -split "`n")
+
+  $start = -1
+  $end = -1
+  for ($index = 0; $index -lt $lines.Count; $index++) {
+    $line = $lines[$index]
+    if ($start -lt 0 -and $line -match '^###\s+' -and $line -notmatch '^###\s+.*Highlights\s*$' -and $line -notmatch '^###\s+.*Release Assets\s*$') {
+      $start = $index
+      continue
+    }
+
+    if ($start -ge 0 -and $line -match '^###\s+.*Release Assets\s*$') {
+      $end = $index
+      break
+    }
+  }
+
+  if ($start -lt 0) {
+    return ""
+  }
+
+  if ($end -lt 0) {
+    $end = $lines.Count
+  }
+
+  $changeLines = @($lines[$start..($end - 1)])
+  $changeText = ($changeLines -join "`n").Trim()
+  if ([string]::IsNullOrWhiteSpace($changeText)) {
+    return ""
+  }
+
+  return $changeText
 }
 
 function Write-SupersededReleaseFollowUpCommits {
@@ -190,9 +256,15 @@ if ([string]::IsNullOrWhiteSpace($normalizedSupersedeTag)) {
   }
 }
 else {
-  Update-SupersededChangelogSection -OldTag $normalizedSupersedeTag -NewTag $normalizedTag
+  $retryFollowUpSection = Get-GeneratedRetryFollowUpSection -Tag $normalizedTag
+  Update-SupersededChangelogSection -OldTag $normalizedSupersedeTag -NewTag $normalizedTag -FollowUpSection $retryFollowUpSection
   Write-Host "Retargeted changelog section from $normalizedSupersedeTag to $normalizedTag."
-  Write-SupersededReleaseFollowUpCommits -OldTag $normalizedSupersedeTag
+  if ([string]::IsNullOrWhiteSpace($retryFollowUpSection)) {
+    Write-SupersededReleaseFollowUpCommits -OldTag $normalizedSupersedeTag
+  }
+  else {
+    Write-Host "Inserted git-cliff retry follow-up changes generated after $normalizedSupersedeTag."
+  }
 }
 
 Write-Host "Prepared $normalizedTag on branch $releaseBranch."
