@@ -34,8 +34,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Check lockfile was not modified
         shell: bash
@@ -74,8 +77,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Validate PR title
         if: >
@@ -127,8 +133,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Check lockfile was not modified
         shell: bash
