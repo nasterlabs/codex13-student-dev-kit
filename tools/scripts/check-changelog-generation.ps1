@@ -17,6 +17,30 @@ $bug = [char]::ConvertFromUtf32(0x1F41B)
 $construction = [char]::ConvertFromUtf32(0x1F3D7) + [char] 0xFE0F
 $upArrow = [char]::ConvertFromUtf32(0x2B06) + [char] 0xFE0F
 
+function Invoke-Git {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]] $Arguments)
+
+  $output = & git -C $Root @Arguments 2>&1
+  if ($LASTEXITCODE -ne 0) {
+    $details = ($output | Out-String).Trim()
+    throw "git $($Arguments -join ' ') failed. $details"
+  }
+
+  return $output
+}
+
+function Sync-GitHistory {
+  $isShallow = ((Invoke-Git rev-parse --is-shallow-repository) | Out-String).Trim()
+  if ($isShallow -eq "true") {
+    Invoke-Git fetch --unshallow --tags --prune origin | Out-Null
+  }
+  else {
+    Invoke-Git fetch --tags --prune origin | Out-Null
+  }
+}
+
+Sync-GitHistory
+
 $preview = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Tag $tag -Preview) -join "`n"
 if ($LASTEXITCODE -ne 0) {
   throw "Changelog preview generation failed."
