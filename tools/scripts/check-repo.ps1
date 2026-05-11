@@ -194,8 +194,11 @@ function Assert-VersionConsistency {
     return
   }
 
-  if ($packageVersion -notmatch "^$([regex]::Escape($appVersion))-alpha\.0$") {
-    Add-Failure "package.json version ($packageVersion) does not match APP_VERSION alpha line ($appVersion-alpha.0)."
+  $prerelease = '(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?'
+  $buildMetadata = '(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?'
+  $semverForAppVersion = "^$([regex]::Escape($appVersion))$prerelease$buildMetadata$"
+  if ($packageVersion -notmatch $semverForAppVersion) {
+    Add-Failure "package.json version ($packageVersion) must be valid SemVer with core matching APP_VERSION ($appVersion)."
   }
 
   foreach ($doc in @(

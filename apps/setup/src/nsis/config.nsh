@@ -9,7 +9,7 @@
 !define APP_START_MENU_FOLDER "Codex 13 Student Dev Kit"
 !define APP_VERSION "0.7.0"
 !ifndef APP_VERSION_QUAD
-!define APP_VERSION_QUAD "0.7.0.0"
+!define APP_VERSION_QUAD "${APP_VERSION}.0"
 !endif
 !define LANG_VERSION_POLISH 1045
 !define LANG_VERSION_ENGLISH 1033

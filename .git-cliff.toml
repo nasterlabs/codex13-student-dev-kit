@@ -1,0 +1,282 @@
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+The current `0.7.x` release line is an alpha line. Public release artifacts
+use `0.7.0-alpha.<build_number>` versions and matching
+`v0.7.0-alpha.<build_number>` tags until the installer, signing and release
+automation are stable enough for a non-alpha release.
+
+Public alpha installer executables are unsigned until Authenticode signing is
+configured.
+
+"""
+
+body = """
+{% if version %}
+<!-- BEGIN RELEASE {{ version }} -->
+
+## 🚀 [{{ version | trim_start_matches(pat="v") }}](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}
+<!-- BEGIN RELEASE Unreleased -->
+
+## [Unreleased]
+{% endif %}
+{% set include_empty_sections = get_env(name="GIT_CLIFF_INCLUDE_EMPTY_SECTIONS", default="0") %}
+
+<!-- BEGIN RELEASE DESCRIPTION -->
+TODO: Add a short release summary.
+<!-- END RELEASE DESCRIPTION -->
+
+### 🌟 Highlights
+
+<!-- BEGIN RELEASE HIGHLIGHTS -->
+- TODO: Add the most important release highlight.
+<!-- END RELEASE HIGHLIGHTS -->
+
+{% for group_name in ["✨ Features", "🐛 Fixes", "⚡ Performance", "📝 Documentation", "♻️ Refactoring", "🏗️ Build, CI and Release Automation", "🔒 Security", "⬆️ Dependencies", "🧹 Maintenance"] %}
+{% set group_commits = commits | filter(attribute="group", value=group_name) %}
+{% if group_commits | length > 0 or include_empty_sections == "1" %}
+### {{ group_name }}
+
+{% if group_commits | length == 0 %}
+_No changes in this category._
+
+{% elif group_name == "⬆️ Dependencies" %}
+{% set deps = group_commits | filter(attribute="scope", value="deps") %}
+{% set deps_dev = group_commits | filter(attribute="scope", value="deps-dev") %}
+
+#### GitHub Actions and CI
+
+{% set_global has_actions = false %}
+{% for commit in deps %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_action = false %}
+{% if title is containing("actions/") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("action-") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("softprops/") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("pnpm/action-setup") %}{% set_global is_action = true %}{% endif %}
+{% if is_action %}
+{% set_global has_actions = true %}
+- Updated `{{ title | replace(from="Bump ", to="") | replace(from="bump ", to="") | replace(from=" from ", to="` from `") | replace(from=" to ", to="` to `") }}` by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% if not has_actions %}
+_No GitHub Actions dependency updates._
+{% endif %}
+
+#### Production Dependencies
+
+{% set_global has_prod = false %}
+{% for commit in deps %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_action = false %}
+{% if title is containing("actions/") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("action-") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("softprops/") %}{% set_global is_action = true %}{% endif %}
+{% if title is containing("pnpm/action-setup") %}{% set_global is_action = true %}{% endif %}
+{% if not is_action %}
+{% set_global has_prod = true %}
+- Updated `{{ title | replace(from="Bump ", to="") | replace(from="bump ", to="") | replace(from=" from ", to="` from `") | replace(from=" to ", to="` to `") }}` by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% if not has_prod %}
+_No production dependency updates._
+{% endif %}
+
+#### Developer Tooling
+
+{% if deps_dev | length == 0 %}
+_No developer tooling dependency updates._
+{% else %}
+{% for commit in deps_dev %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+- Updated `{{ title | replace(from="Bump ", to="") | replace(from="bump ", to="") | replace(from=" from ", to="` from `") | replace(from=" to ", to="` to `") }}` by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endfor %}
+{% endif %}
+
+{% elif group_name == "🏗️ Build, CI and Release Automation" %}
+{% set_global has_release_automation = false %}
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% if title is containing("release") %}{% set_global has_release_automation = true %}{% endif %}
+{% if title is containing("Release") %}{% set_global has_release_automation = true %}{% endif %}
+{% if title is containing("tag") %}{% set_global has_release_automation = true %}{% endif %}
+{% if title is containing("assets") %}{% set_global has_release_automation = true %}{% endif %}
+{% endfor %}
+{% if has_release_automation %}
+#### Release Automation
+
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_release_automation = false %}
+{% if title is containing("release") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("Release") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("tag") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("assets") %}{% set_global is_release_automation = true %}{% endif %}
+{% if is_release_automation %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% set_global has_developer_tooling = false %}
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% if title is containing("developer tooling") %}{% set_global has_developer_tooling = true %}{% endif %}
+{% if title is containing("pwsh") %}{% set_global has_developer_tooling = true %}{% endif %}
+{% endfor %}
+{% if has_developer_tooling %}
+#### Developer Tooling
+
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_developer_tooling = false %}
+{% if title is containing("developer tooling") %}{% set_global is_developer_tooling = true %}{% endif %}
+{% if title is containing("pwsh") %}{% set_global is_developer_tooling = true %}{% endif %}
+{% if is_developer_tooling %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% endif %}
+
+{% set_global has_repository_checks = false %}
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% if title is containing("CodeQL") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("DCO") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("lint") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("signed") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("editorconfig") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("dependency update validation") %}{% set_global has_repository_checks = true %}{% endif %}
+{% if title is containing("NSIS plugin hash") %}{% set_global has_repository_checks = true %}{% endif %}
+{% endfor %}
+{% if has_repository_checks %}
+#### Repository Checks
+
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_repository_check = false %}
+{% if title is containing("CodeQL") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("DCO") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("lint") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("signed") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("editorconfig") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("dependency update validation") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("NSIS plugin hash") %}{% set_global is_repository_check = true %}{% endif %}
+{% if is_repository_check %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% endif %}
+
+#### CI/CD
+
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+{% set_global is_release_automation = false %}
+{% if title is containing("release") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("Release") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("tag") %}{% set_global is_release_automation = true %}{% endif %}
+{% if title is containing("assets") %}{% set_global is_release_automation = true %}{% endif %}
+{% set_global is_developer_tooling = false %}
+{% if title is containing("developer tooling") %}{% set_global is_developer_tooling = true %}{% endif %}
+{% if title is containing("pwsh") %}{% set_global is_developer_tooling = true %}{% endif %}
+{% set_global is_repository_check = false %}
+{% if title is containing("CodeQL") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("DCO") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("lint") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("signed") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("editorconfig") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("dependency update validation") %}{% set_global is_repository_check = true %}{% endif %}
+{% if title is containing("NSIS plugin hash") %}{% set_global is_repository_check = true %}{% endif %}
+{% if not is_release_automation and not is_developer_tooling and not is_repository_check %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+
+{% else %}
+{% set_global has_scoped_commits = false %}
+{% for commit in group_commits %}
+{% if commit.scope %}{% set_global has_scoped_commits = true %}{% endif %}
+{% endfor %}
+{% if has_scoped_commits %}
+{% for scope, scoped_commits in group_commits | group_by(attribute="scope") %}
+#### {% if scope %}{{ scope | replace(from="-", to=" ") | title }}{% else %}General{% endif %}
+
+{% for commit in scoped_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endfor %}
+{% endfor %}
+{% else %}
+{% for commit in group_commits %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+- {% if commit.scope %}**{{ commit.scope | replace(from="-", to=" ") | title }}:** {% endif %}{{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endfor %}
+{% endif %}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{% if version %}
+### 📦 Release Assets
+
+- GitHub Release: [`{{ version }}`](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/{{ version }})
+{% endif %}
+
+{% if version %}<!-- END RELEASE {{ version }} -->{% else %}<!-- END RELEASE Unreleased -->{% endif %}
+"""
+
+footer = ""
+
+trim = true
+
+postprocessors = [
+  { pattern = ' +$', replace = "" },
+  { pattern = '\n{3,}', replace = "\n\n" },
+]
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+tag_pattern = "v[0-9].*"
+sort_commits = "newest"
+
+commit_parsers = [
+  { message = "^feat", group = "✨ Features" },
+
+  { message = "^fix\\(deps", group = "⬆️ Dependencies" },
+  { message = "^fix\\(security\\)", group = "🔒 Security" },
+  { message = "^fix", group = "🐛 Fixes" },
+
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^docs", group = "📝 Documentation" },
+  { message = "^refactor", group = "♻️ Refactoring" },
+
+  { message = "^chore\\(deps", group = "⬆️ Dependencies" },
+  { message = "^build\\(deps", group = "⬆️ Dependencies" },
+  { body = ".*dependabot.*", group = "⬆️ Dependencies" },
+
+  { message = "^ci", group = "🏗️ Build, CI and Release Automation" },
+  { message = "^test", group = "🏗️ Build, CI and Release Automation" },
+  { message = "^build", group = "🏗️ Build, CI and Release Automation" },
+
+  { message = "^chore\\(security\\)", group = "🔒 Security" },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore: use pwsh for developer tooling", group = "🏗️ Build, CI and Release Automation" },
+  { message = "^chore: replace eclint editorconfig check", group = "🏗️ Build, CI and Release Automation" },
+  { message = "^chore: verify signed commits", group = "🏗️ Build, CI and Release Automation" },
+  { message = "^chore", group = "🧹 Maintenance" },
+]
+
+[remote.github]
+owner = "nasterlabs"
+repo = "codex13-student-dev-kit"

@@ -13,6 +13,54 @@
         "isDefault": true
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Release: prepare branch",
+      "type": "shell",
+      "command": "task",
+      "args": [
+        "release:prepare",
+        "TAG=${input:releaseTag}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Release: conclude branch",
+      "type": "shell",
+      "command": "task",
+      "args": [
+        "release:conclude",
+        "TAG=${input:releaseTag}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Release: conclude branch and open PR",
+      "type": "shell",
+      "command": "task",
+      "args": [
+        "release:conclude",
+        "TAG=${input:releaseTag}",
+        "OPEN_PR=1"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "releaseTag",
+      "type": "promptString",
+      "description": "Release tag, for example v0.7.0-alpha.1",
+      "default": "v0.7.0-alpha.1"
     }
   ]
 }
