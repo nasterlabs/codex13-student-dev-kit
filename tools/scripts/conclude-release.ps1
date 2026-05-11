@@ -134,7 +134,7 @@ if ($staged.Count -eq 0) {
   throw "No staged release changes to commit."
 }
 
-& git -C $Root commit -m $commitSubject
+& git -C $Root commit -s -m $commitSubject
 if ($LASTEXITCODE -ne 0) {
   throw "git commit failed."
 }
@@ -147,11 +147,24 @@ if ($OpenPullRequest) {
     throw "git push failed."
   }
 
+  $pullRequestBody = @"
+## Summary
+
+- prepare $normalizedTag release metadata
+- update versioned release files
+- add the edited changelog entry for $normalizedTag
+
+## Verification
+
+- task check
+- git diff --check
+"@
+
   & gh pr create `
     --base $BaseBranch `
     --head $releaseBranch `
     --title $commitSubject `
-    --body "Prepares $normalizedTag for release."
+    --body $pullRequestBody
   if ($LASTEXITCODE -ne 0) {
     throw "gh pr create failed."
   }
