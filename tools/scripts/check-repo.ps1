@@ -211,6 +211,21 @@ function Assert-VersionConsistency {
   }
 }
 
+function Assert-ReleaseConcludeAutomation {
+  $releaseScriptPath = "tools/scripts/conclude-release.ps1"
+  $releaseScriptText = Get-FileText -RelativePath $releaseScriptPath
+
+  if ($releaseScriptText -notmatch 'git\s+-C\s+\$Root\s+commit\s+-s\s+-m\s+\$commitSubject') {
+    Add-Failure "$releaseScriptPath must create release commits with DCO sign-off."
+  }
+
+  foreach ($requiredSection in @("## Summary", "## Verification")) {
+    if (-not $releaseScriptText.Contains($requiredSection)) {
+      Add-Failure "$releaseScriptPath PR body must include $requiredSection."
+    }
+  }
+}
+
 function Assert-NoRepositoryLocalPath {
   param(
     [Parameter(Mandatory = $true)]
@@ -342,6 +357,7 @@ $requiredFiles = @(
   "packages/nsis-naster-archive/src/nasterarchive.vcxproj.filters",
   "packages/nsis-naster-archive/src/resource.h",
   "tools/scripts/check-dco.ps1",
+  "tools/scripts/conclude-release.ps1",
   "tools/scripts/update-release-metadata.ps1",
   "tools/scripts/write-release-manifest.ps1"
 )
@@ -389,6 +405,7 @@ if ($textFiles.Count -gt 0) {
   Assert-DocsLinks -RelativePaths $textFiles
 }
 Assert-VersionConsistency
+Assert-ReleaseConcludeAutomation
 
 $unexpectedPayloadFiles = @(
   "apps/setup/src/payload/logs/install.log"
