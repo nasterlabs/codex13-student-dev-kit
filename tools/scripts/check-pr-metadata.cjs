@@ -1,5 +1,7 @@
 const allowedBranchPattern =
   /^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)\/[a-z0-9][a-z0-9._-]*$/;
+const allowedReleaseBranchPattern =
+  /^release\/v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$/;
 const allowedBotBranchPattern = /^(dependabot|renovate)\//;
 const allowedDependencyBotAuthors = new Set(['dependabot[bot]', 'renovate[bot]']);
 
@@ -15,10 +17,11 @@ if (!headRef) {
   errors.push('Missing PR_HEAD_REF.');
 } else if (
   !allowedBranchPattern.test(headRef) &&
+  !allowedReleaseBranchPattern.test(headRef) &&
   !allowedBotBranchPattern.test(headRef)
 ) {
   errors.push(
-    `Branch name must match <type>/<name> using a conventional type. Actual: ${headRef}`,
+    `Branch name must match <type>/<name> using a conventional type or release/v<semver>. Actual: ${headRef}`,
   );
 }
 
