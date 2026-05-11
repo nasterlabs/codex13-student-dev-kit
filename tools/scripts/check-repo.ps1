@@ -334,6 +334,7 @@ $requiredFiles = @(
   "LICENSES/MIT.txt",
   "LICENSES/Zlib.txt",
   "docs/development.md",
+  "docs/licensing.md",
   "docs/release.md",
   "docs/setup/manifest.md",
   "docs/setup/unattended.md",
