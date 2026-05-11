@@ -187,6 +187,12 @@ tasks:
     cmds:
       - pnpm run check:yaml
 
+  check:changelog:
+    desc: Verify generated changelog encoding and dependency formatting
+    platforms: [windows]
+    cmds:
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/check-changelog-generation.ps1
+
   check:spelling:
     desc: Spell-check Markdown files with cspell (requires pnpm install)
     cmds:
@@ -199,6 +205,7 @@ tasks:
       - check:repo
       - lint
       - check:editorconfig
+      - check:changelog
       - check:md
       - check:yaml
       - check:spelling
