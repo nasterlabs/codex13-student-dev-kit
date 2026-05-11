@@ -99,6 +99,55 @@ tasks:
     cmds:
       - bash ./tools/scripts/build-nsis-assets.sh
 
+  build:brand-assets:
+    desc: Regenerate all committed brand images
+    platforms: [windows]
+    deps:
+      - build:assets
+      - build:readme-header
+      - build:screenshots
+      - build:social-preview
+
+  build:readme-header:
+    desc: "Regenerate README header image (requires bash and ImageMagick)"
+    platforms: [windows]
+    sources:
+      - assets/brand/codex13-signet-digital.svg
+      - tools/scripts/build-readme-header.sh
+    generates:
+      - docs/assets/readme-header-dark.png
+      - docs/assets/readme-header-light.png
+    cmds:
+      - bash ./tools/scripts/build-readme-header.sh
+
+  build:social-preview:
+    desc: "Regenerate GitHub social preview image (requires bash and ImageMagick)"
+    platforms: [windows]
+    sources:
+      - assets/brand/codex13-signet-digital.svg
+      - tools/scripts/build-social-preview.sh
+    generates:
+      - docs/assets/social-preview.png
+      - docs/assets/social-preview-branding.png
+      - docs/assets/social-preview-conservative.png
+      - docs/assets/social-preview-landing.png
+      - docs/assets/social-preview-minimal.png
+    cmds:
+      - bash ./tools/scripts/build-social-preview.sh
+
+  build:screenshots:
+    desc: "Regenerate framed README screenshots (requires bash and ImageMagick)"
+    platforms: [windows]
+    sources:
+      - docs/screenshots/*.png
+      - docs/screenshots/*.jpg
+      - docs/screenshots/*.jpeg
+      - tools/scripts/build-screenshot-assets.sh
+    generates:
+      - docs/screenshots/framed/*.png
+    cmds:
+      - bash ./tools/scripts/build-screenshot-assets.sh
+
   signing:dev-cert:
     desc: Generate and trust a local self-signed code signing certificate
     platforms: [windows]
