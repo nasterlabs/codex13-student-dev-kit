@@ -55,6 +55,12 @@ function Get-ChangelogSection {
   if (Test-Path -LiteralPath $localGitCliff) {
     $output = & $localGitCliff --config $ConfigPath --unreleased --tag $Tag --strip header
   }
+  elseif ($gitCliff = Get-Command git-cliff -ErrorAction SilentlyContinue) {
+    $output = & $gitCliff.Source --config $ConfigPath --unreleased --tag $Tag --strip header
+  }
+  elseif ($gitCliff = Get-Command git-cliff.cmd -ErrorAction SilentlyContinue) {
+    $output = & $gitCliff.Source --config $ConfigPath --unreleased --tag $Tag --strip header
+  }
   else {
     $output = & pnpm exec git-cliff --config $ConfigPath --unreleased --tag $Tag --strip header
   }

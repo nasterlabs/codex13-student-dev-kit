@@ -25,6 +25,7 @@ on:
         type: boolean
 
 permissions:
+  checks: read
   contents: read
   pull-requests: read
 
@@ -64,6 +65,18 @@ jobs:
         env:
           RELEASE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.release_branch || github.event.pull_request.head.ref }}
         run: node tools/scripts/check-release-state.cjs
+
+      - name: Wait for main checks
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          node tools/scripts/wait-for-check-runs.cjs
+          --repo "${{ github.repository }}"
+          --sha "${{ github.event.pull_request.merge_commit_sha }}"
+          --required "DCO and signed commits,Repository checks,Build installer,Analyze (actions),Analyze (c-cpp),Analyze (javascript-typescript)"
+          --timeout-seconds 1200
+          --interval-seconds 15
 
       - name: Check tag does not exist
         shell: bash

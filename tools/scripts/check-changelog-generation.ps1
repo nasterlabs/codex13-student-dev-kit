@@ -10,6 +10,7 @@ $OutputEncoding = $utf8NoBom
 
 $tag = "v0.7.0-alpha.1"
 $scriptPath = Join-Path $Root "tools/scripts/update-changelog.ps1"
+$nodeBinPath = Join-Path $Root "node_modules/.bin"
 $rocket = [char]::ConvertFromUtf32(0x1F680)
 $glowingStar = [char]::ConvertFromUtf32(0x1F31F)
 $sparkles = [char]::ConvertFromUtf32(0x2728)
@@ -41,9 +42,41 @@ function Sync-GitHistory {
 
 Sync-GitHistory
 
-$preview = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Tag $tag -Preview) -join "`n"
-if ($LASTEXITCODE -ne 0) {
-  throw "Changelog preview generation failed."
+$testRoot = Join-Path $Root ".build/changelog-generation-check"
+$testRepo = Join-Path $testRoot "repo"
+$testChangelog = Join-Path $testRepo "CHANGELOG.md"
+
+if (Test-Path -LiteralPath $testRoot) {
+  Remove-Item -LiteralPath $testRoot -Recurse -Force
+}
+
+New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
+Invoke-Git clone --local --no-hardlinks $Root $testRepo | Out-Null
+
+Push-Location $testRepo
+$previousPath = $env:PATH
+try {
+  $env:PATH = "$nodeBinPath$([System.IO.Path]::PathSeparator)$previousPath"
+  $existingTags = @(& git tag --list)
+  if ($LASTEXITCODE -ne 0) {
+    throw "git tag --list failed in changelog test repository."
+  }
+
+  if ($existingTags.Count -gt 0) {
+    & git tag --delete @existingTags | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to delete tags in changelog test repository."
+    }
+  }
+
+  $preview = (& pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Tag $tag -ConfigPath (Join-Path $Root ".git-cliff.toml") -Preview) -join "`n"
+  if ($LASTEXITCODE -ne 0) {
+    throw "Changelog preview generation failed."
+  }
+}
+finally {
+  $env:PATH = $previousPath
+  Pop-Location
 }
 
 if ([string]::IsNullOrWhiteSpace($preview)) {
@@ -81,18 +114,24 @@ foreach ($pattern in $forbiddenPatterns) {
   }
 }
 
-$testRoot = Join-Path $Root ".build/changelog-generation-check"
-$testChangelog = Join-Path $testRoot "CHANGELOG.md"
-New-Item -ItemType Directory -Force -Path $testRoot | Out-Null
 [System.IO.File]::WriteAllText(
   $testChangelog,
   "# Changelog`n`n<!-- New release entries go here -->`n",
   $utf8NoBom
 )
 
-& pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Tag $tag -ChangelogPath $testChangelog
-if ($LASTEXITCODE -ne 0) {
-  throw "Changelog insertion check failed."
+Push-Location $testRepo
+$previousPath = $env:PATH
+try {
+  $env:PATH = "$nodeBinPath$([System.IO.Path]::PathSeparator)$previousPath"
+  & pwsh -NoProfile -ExecutionPolicy Bypass -File $scriptPath -Tag $tag -ConfigPath (Join-Path $Root ".git-cliff.toml") -ChangelogPath $testChangelog
+  if ($LASTEXITCODE -ne 0) {
+    throw "Changelog insertion check failed."
+  }
+}
+finally {
+  $env:PATH = $previousPath
+  Pop-Location
 }
 
 $inserted = [System.IO.File]::ReadAllText($testChangelog, $utf8NoBom)
