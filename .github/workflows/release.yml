@@ -1,6 +1,6 @@
 name: Release
 run-name: >-
-  Release ${{ (github.event_name == 'push' && github.ref_name) || (inputs.version != '' && inputs.version) || format('v0.7.0-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
+  Release ${{ (github.event_name == 'push' && github.ref_name) || (inputs.version != '' && inputs.version) || format('auto-alpha.{0}', github.run_number) }} • ${{ github.event_name == 'workflow_dispatch' && 'manual' || github.event_name }} • @${{ github.actor }}${{ github.event_name == 'workflow_dispatch' && inputs.publish_release == 'draft' && ' (draft)' || github.event_name == 'workflow_dispatch' && ' (check)' || '' }}
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Optional. Must match v<semver>, e.g. v0.7.1-alpha.1. Empty = v0.7.0-alpha.<run_number>."
+        description: "Optional. Must match v<semver>, e.g. v0.7.1-alpha.1. Empty = v<APP_VERSION>-alpha.<run_number>."
         required: false
         default: ""
         type: string
@@ -111,7 +111,7 @@ jobs:
         env:
           INPUT_VERSION: ${{ inputs.version }}
         run: |
-          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?'
           $tagSemverPattern = "^v$semverCore$"
           $configPath = "apps/setup/src/nsis/config.nsh"
           $configText = Get-Content -LiteralPath $configPath -Raw
@@ -267,7 +267,7 @@ jobs:
           }
           $appVersion = $appVersionMatch.Groups["version"].Value
 
-          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?'
+          $semverCore = '(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?'
           $tagSemverPattern = "^v(?<version>$semverCore)$"
 
           if ($isTagRelease) {
@@ -393,48 +393,106 @@ jobs:
         shell: pwsh
         run: task build
 
-      - name: Generate checksums
+      - name: Rename release installer
         shell: pwsh
         run: |
-          $assetName = "Codex13SDK-Setup-win-x64-$env:BUILD_VERSION.exe"
+          $assetName = "codex13-sdk_$env:BUILD_VERSION`_windows_x64_setup.exe"
           $assetPath = Join-Path "dist\setup" $assetName
           Move-Item -LiteralPath "dist\setup\Codex13SDK-Setup.exe" -Destination $assetPath -Force
-          Get-FileHash -Algorithm SHA256 $assetPath |
-            ForEach-Object { "$($_.Hash.ToLower())  $assetName" } |
-            Set-Content -LiteralPath "$assetPath.sha256" -Encoding ASCII
+
+      - name: Generate GitHub changelog notes
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $payload = @{
+            tag_name = $env:RELEASE_TAG_NAME
+            target_commitish = $env:GITHUB_SHA
+            configuration_file_path = ".github/release.yml"
+          } | ConvertTo-Json -Compress
+
+          try {
+            $generatedNotes = $payload |
+              gh api "repos/$env:GITHUB_REPOSITORY/releases/generate-notes" `
+                --method POST `
+                --input - |
+              ConvertFrom-Json
+
+            $generatedNotes.body |
+              Set-Content -LiteralPath "dist/setup/Codex13SDK.github-notes.md" -Encoding UTF8
+          } catch {
+            Write-Warning "GitHub-generated notes are unavailable: $_"
+            "" | Set-Content -LiteralPath "dist/setup/Codex13SDK.github-notes.md" -Encoding UTF8
+          }
 
       - name: Generate release manifest
         shell: pwsh
         run: |
           ./tools/scripts/write-release-manifest.ps1 `
             -BuildVersion $env:BUILD_VERSION `
-            -ReleaseNotesPath dist/setup/Codex13SDK.release-notes.md
+            -GeneratedNotesPath dist/setup/Codex13SDK.github-notes.md
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          $checksumsName = "codex13-sdk_$env:BUILD_VERSION`_checksums.txt"
+          $assetNames = @(
+            "codex13-sdk_$env:BUILD_VERSION`_windows_x64_setup.exe",
+            "codex13-sdk_$env:BUILD_VERSION`_release_manifest.json"
+          )
+
+          Push-Location "dist/setup"
+          try {
+            $checksums = foreach ($assetName in $assetNames) {
+              $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $assetName).Hash.ToLowerInvariant()
+              "$hash  $assetName"
+            }
+
+            $checksums | Set-Content -LiteralPath $checksumsName -Encoding ASCII
+          } finally {
+            Pop-Location
+          }
 
       - name: Upload release artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: Codex13SDK-Setup-${{ steps.configure-environment.outputs.build_version }}
           path: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
-            dist/setup/Codex13SDK.release-notes.md
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
+            dist/setup/codex13-sdk_${{ steps.configure-environment.outputs.build_version }}_windows_x64_setup.exe
+            dist/setup/codex13-sdk_${{ steps.configure-environment.outputs.build_version }}_checksums.txt
+            dist/setup/codex13-sdk_${{ steps.configure-environment.outputs.build_version }}_release_manifest.json
+            dist/setup/codex13-sdk_${{ steps.configure-environment.outputs.build_version }}_release_notes.md
           if-no-files-found: error
 
       - name: Publish GitHub Release
         if: ${{ steps.configure-environment.outputs.publish_github_release == 'true' }}
-        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
-        with:
-          tag_name: ${{ steps.configure-environment.outputs.release_tag_name }}
-          name: Codex 13 Student Dev Kit ${{ steps.configure-environment.outputs.build_version }}
-          body_path: dist/setup/Codex13SDK.release-notes.md
-          draft: ${{ steps.configure-environment.outputs.is_draft_release == 'true' }}
-          prerelease: ${{ steps.configure-environment.outputs.is_prerelease == 'true' }}
-          make_latest: false
-          files: |
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe
-            dist/setup/Codex13SDK-Setup-win-x64-${{ steps.configure-environment.outputs.build_version }}.exe.sha256
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.release-manifest.json
-            dist/setup/codex13-sdk-${{ steps.configure-environment.outputs.build_version }}.changelog.md
-          generate_release_notes: false
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseArgs = @(
+            $env:RELEASE_TAG_NAME,
+            "--title", "Codex 13 Student Dev Kit $env:BUILD_VERSION",
+            "--target", $env:GITHUB_SHA,
+            "--notes-file", "dist/setup/codex13-sdk_$env:BUILD_VERSION`_release_notes.md",
+            "--latest=false"
+          )
+
+          if ($env:IS_DRAFT_RELEASE -eq "true") {
+            $releaseArgs += "--draft"
+          }
+
+          if ($env:IS_PRERELEASE -eq "true") {
+            $releaseArgs += "--prerelease"
+          }
+
+          $manifestPath = "dist/setup/codex13-sdk_$env:BUILD_VERSION`_release_manifest.json"
+          $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+
+          # The asset#label syntax gives the GitHub Release asset panel friendly display names.
+          foreach ($asset in $manifest.assets) {
+            $assetPath = Join-Path "dist/setup" $asset.fileName
+            $releaseArgs += "$assetPath#$($asset.label)"
+          }
+
+          gh release create @releaseArgs

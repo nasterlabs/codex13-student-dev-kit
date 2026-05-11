@@ -16,6 +16,8 @@
   "scripts": {
     "commitlint": "commitlint --from main --to HEAD",
     "commitlint:range": "commitlint",
+    "changelog": "pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/update-changelog.ps1 -Preview",
+    "changelog:write": "pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/update-changelog.ps1",
     "check:editorconfig": "node tools/scripts/check-editorconfig.cjs",
     "check:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#.build\"",
     "check:spelling": "cspell lint --no-progress README.md AGENTS.md CODE_OF_CONDUCT.md CONTRIBUTING.md SECURITY.md SUPPORT.md CITATION.cff codemeta.json .zenodo.json docs/**/*.md packages/**/*.md apps/setup/vendor/README.md apps/setup/src/nsis/i18n/*.nsh apps/setup/src/nsis/pages/terms-pl.rtf apps/setup/src/patches/xampp/root/install/README-xampp-unicode-patch.md .github/**/*.yml Taskfile.yml package.json",
@@ -28,6 +30,7 @@
     "@evilmartians/lefthook": "^2.1.6",
     "cspell": "^10.0.0",
     "editorconfig-checker": "^6.1.1",
+    "git-cliff": "^2.13.1",
     "markdownlint-cli2": "^0.22.1",
     "yaml": "^2.8.4"
   }

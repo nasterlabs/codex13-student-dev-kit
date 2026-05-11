@@ -119,6 +119,6 @@
       "audienceType": "Workshop participants"
     }
   ],
-  "releaseNotes": "Release metadata for Codex 13 Student Dev Kit 0.7.0-alpha.0. See the GitHub Release for installer artifacts, checksums, manifest and changelog.",
+  "releaseNotes": "Release metadata for Codex 13 Student Dev Kit 0.7.0-alpha.0. See the GitHub Release for installer artifacts, checksums, release notes and manifest.",
   "readme": "https://github.com/nasterlabs/codex13-student-dev-kit#readme"
 }

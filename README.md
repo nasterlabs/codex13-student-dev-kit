@@ -82,7 +82,7 @@ Development/build:
 
 ## Quick Start
 
-1. Download `Codex13SDK-Setup-win-x64-<version>.exe` from the
+1. Download `codex13-sdk_<version>_windows_x64_setup.exe` from the
    [latest release](https://github.com/nasterlabs/codex13-student-dev-kit/releases/latest).
 2. Double-click the installer. No administrator rights are needed when using the
    default installation folder.
