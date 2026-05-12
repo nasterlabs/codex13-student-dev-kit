@@ -174,9 +174,13 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        shell: pwsh
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
         shell: pwsh
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Check lockfile was not modified
         shell: bash
