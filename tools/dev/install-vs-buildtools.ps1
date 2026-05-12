@@ -83,7 +83,8 @@ $process = Start-Process -FilePath $InstallerPath `
 # --- result ---
 if ($process.ExitCode -eq 0) {
     Write-Host "[OK] Installation completed successfully." -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "[ERROR] Installation failed. ExitCode=$($process.ExitCode)" -ForegroundColor Red
     exit $process.ExitCode
 }

@@ -143,12 +143,12 @@ $manifest = [ordered]@{
         startMenu = $true
         desktop   = $desktop
     }
-    vscode       = [ordered]@{
+    vscode        = [ordered]@{
         profile                    = $VsCodeProfile
         portableData               = $vsCodePortableDataValue
         launcherAddsSdkToolsToPath = $true
     }
-    logPath      = $LogPath
+    logPath       = $LogPath
 }
 
 if (-not (Test-Path -LiteralPath $InstallRoot -PathType Container)) {
@@ -162,10 +162,10 @@ function Format-Json {
     $inStr = $false
     $esc = $false
     foreach ($ch in $Compact.ToCharArray()) {
-        if ($esc)        { [void]$sb.Append($ch); $esc = $false; continue }
+        if ($esc) { [void]$sb.Append($ch); $esc = $false; continue }
         if ($ch -eq '\' -and $inStr) { [void]$sb.Append($ch); $esc = $true; continue }
         if ($ch -eq '"') { $inStr = -not $inStr; [void]$sb.Append($ch); continue }
-        if ($inStr)      { [void]$sb.Append($ch); continue }
+        if ($inStr) { [void]$sb.Append($ch); continue }
         switch ($ch) {
             '{' { [void]$sb.Append($ch); [void]$sb.Append("`n"); $depth++; [void]$sb.Append('  ' * $depth) }
             '}' { [void]$sb.Append("`n"); $depth--; [void]$sb.Append('  ' * $depth); [void]$sb.Append($ch) }
@@ -173,7 +173,7 @@ function Format-Json {
             ']' { [void]$sb.Append("`n"); $depth--; [void]$sb.Append('  ' * $depth); [void]$sb.Append($ch) }
             ',' { [void]$sb.Append($ch); [void]$sb.Append("`n"); [void]$sb.Append('  ' * $depth) }
             ':' { [void]$sb.Append(': ') }
-            default { if ($ch -notin ' ',"`t","`r","`n") { [void]$sb.Append($ch) } }
+            default { if ($ch -notin ' ', "`t", "`r", "`n") { [void]$sb.Append($ch) } }
         }
     }
     return $sb.ToString()
