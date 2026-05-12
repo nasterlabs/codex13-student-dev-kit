@@ -329,6 +329,7 @@ $requiredFiles = @(
   ".github/workflows/ci.yml",
   ".github/workflows/codeql.yml",
   ".github/workflows/release.yml",
+  ".github/workflows/update-automerge-prs.yml",
   "AGENTS.md",
   "CLAUDE.md",
   "commitlint.config.cjs",
@@ -392,6 +393,7 @@ $requiredFiles = @(
   "packages/nsis-naster-archive/src/resource.h",
   "tools/scripts/check-dco.ps1",
   "tools/scripts/conclude-release.ps1",
+  "tools/scripts/update-automerge-pr-branches.cjs",
   "tools/scripts/update-release-metadata.ps1",
   "tools/scripts/write-release-manifest.ps1"
 )
