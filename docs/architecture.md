@@ -16,7 +16,8 @@ SDK copies to coexist on one computer.
   planned repair placeholders, and uninstall logic.
 - `apps/setup/src/nsis/config.nsh` - product metadata, versions, URLs, hashes, paths, and
   size estimates.
-- `apps/setup/src/nsis/i18n.nsh` - installer UI strings.
+- `apps/setup/src/nsis/i18n/` - installer UI strings and language version
+  resources.
 - `apps/setup/src/installer-scripts/` - helper PowerShell scripts used by the installer.
 - `packages/nsis-naster-archive/` - native NSIS Unicode archive plug-in package.
 - `apps/setup/scripts/build.ps1` - build validation, `makensis`, version resource setup,

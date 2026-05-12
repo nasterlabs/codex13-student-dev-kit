@@ -10,9 +10,9 @@ The installer product version core is defined in `apps/setup/src/nsis/config.nsh
 !define APP_VERSION "0.7.0"
 ```
 
-`package.json` follows the same first public line as `0.7.0-alpha.0`; the
-actual installer build version is resolved by `apps/setup/scripts/build.ps1` from
-`BUILD_VERSION`.
+`package.json` stores the repository package version used by tooling and release
+preparation. The actual installer build version is resolved by
+`apps/setup/scripts/build.ps1` from `BUILD_VERSION`.
 
 `APP_VERSION` is the source of truth for the installer version core
 (`major.minor.patch`). Release tags and manual release workflow test versions
@@ -39,9 +39,10 @@ version/changelog changes:
 task release:prepare TAG=v0.7.0-alpha.1
 ```
 
-This creates `release/v0.7.0-alpha.1` from `origin/main`, updates
-`APP_VERSION` in `apps/setup/src/nsis/config.nsh`, updates `package.json`, and
-inserts a generated changelog section after the
+This creates `release/v0.7.0-alpha.1` from `origin/main`, updates versioned
+source files, including `APP_VERSION` in `apps/setup/src/nsis/config.nsh` when
+the SemVer core changes, updates `package.json`, refreshes citation/archive
+metadata, and inserts a generated changelog section after the
 `<!-- New release entries go here -->` marker.
 
 After that:
@@ -61,8 +62,8 @@ After that:
    task release:conclude TAG=v0.7.0-alpha.1 OPEN_PR=1
    ```
 
-`release:conclude` validates `package.json`, `APP_VERSION`, and the changelog
-markers, runs repository checks, then commits the branch as
+`release:conclude` validates `package.json`, `APP_VERSION`, release metadata,
+and the changelog markers, runs repository checks, then commits the branch as
 `chore(release): prepare v<semver>`.
 
 The release workflow validates this before the expensive release build job. If
@@ -293,8 +294,8 @@ reviewable changelog prepared in the release PR.
 
 ## Citation and Archive Metadata
 
-Before a production release, update the repository-level research/archive
-metadata so it matches the published artifact:
+For public releases, update the repository-level research/archive metadata so it
+matches the published artifact:
 
 - `CITATION.cff`: update `version`, `date-released`, `commit` and the release
   `identifiers` entry. When a Zenodo DOI exists, add or replace the identifier
@@ -305,16 +306,20 @@ metadata so it matches the published artifact:
 - `codemeta.json`: update `version`, `datePublished`, `releaseNotes` and any
   repository/release URLs that changed for the release.
 
-Use the metadata helper before creating a production release tag:
+Use the metadata helper before creating a public release tag:
 
 ```powershell
 task release:metadata -- -BuildVersion 0.7.0-alpha.<build_number>
 ```
 
+`task release:prepare` runs the same helper for the release branch so the
+repository metadata moves with the version bump. The release workflow also runs
+the helper again in its build workspace with the exact tag build SHA, so the
+uploaded/generated release metadata is consistent with `BUILD_VERSION` and the
+release tag.
+
 After Zenodo assigns a DOI, run the helper again with `-Doi <doi>` before the
-next metadata commit or release metadata refresh. The release workflow also
-runs the helper in its build workspace so uploaded/generated release metadata is
-consistent with `BUILD_VERSION` and the release tag.
+next metadata commit or release metadata refresh.
 
 ## Authenticode Signing
 

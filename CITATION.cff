@@ -15,8 +15,8 @@ url: 'https://codex13.dev/student-dev-kit'
 identifiers:
   - type: url
     value: >-
-      https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.0
-    description: GitHub Release for Codex 13 Student Dev Kit 0.7.0-alpha.0.
+      https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.3
+    description: GitHub Release for Codex 13 Student Dev Kit 0.7.0-alpha.3.
 abstract: >-
   Codex 13 Student Dev Kit is a Windows installer that sets up a portable
   development environment toolkit for students, classrooms, workshops and
@@ -33,6 +33,6 @@ keywords:
   - nsis
   - education
 license: Apache-2.0
-commit: 014465bedfb9b1ef2fbdf80813a3be1ac3c6630f
-version: 0.7.0-alpha.0
-date-released: '2026-05-04'
+commit: 218add05fb905ab32a36e6a42133bf080d4403ef
+version: 0.7.0-alpha.3
+date-released: '2026-05-11'

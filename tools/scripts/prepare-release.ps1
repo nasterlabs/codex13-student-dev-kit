@@ -14,6 +14,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $Root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..\..")).Path
+Set-Location -LiteralPath $Root
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 $semverTagPattern = '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$'
 
@@ -248,6 +249,19 @@ $configText = [regex]::Replace(
     1
 )
 Write-Utf8NoBom -Path $configPath -Content $configText
+
+$releaseMetadataCommit = (& git -C $Root rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0) {
+    throw "Cannot resolve release metadata commit."
+}
+
+& pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "tools/scripts/update-release-metadata.ps1") `
+    -BuildVersion $version `
+    -Commit $releaseMetadataCommit `
+    -ReleaseUrl "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/$normalizedTag"
+if ($LASTEXITCODE -ne 0) {
+    throw "Release metadata update failed."
+}
 
 if ([string]::IsNullOrWhiteSpace($normalizedSupersedeTag)) {
     & pwsh -NoProfile -ExecutionPolicy Bypass -File (Join-Path $Root "tools/scripts/update-changelog.ps1") -Tag $normalizedTag
