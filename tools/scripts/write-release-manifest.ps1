@@ -594,8 +594,6 @@ foreach ($tool in $manifest.tools) {
 }
 
 $notes = New-Object System.Collections.Generic.List[string]
-$notes.Add("# Codex 13 Student Dev Kit $BuildVersion")
-$notes.Add("")
 if ($releaseDescription.Count -gt 0) {
   foreach ($line in $releaseDescription) {
     $notes.Add($line)

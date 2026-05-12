@@ -240,9 +240,15 @@ function Assert-ReleaseConcludeAutomation {
     Add-Failure "$releaseScriptPath must create release commits with DCO sign-off."
   }
 
-  foreach ($requiredSection in @("## Summary", "## Verification")) {
+  foreach ($requiredSection in @("Summary", "Verification", "Notes")) {
     if (-not $releaseScriptText.Contains($requiredSection)) {
       Add-Failure "$releaseScriptPath PR body must include $requiredSection."
+    }
+  }
+
+  foreach ($requiredLine in @("- [x] ``task check``", "- [x] ``git diff --check``")) {
+    if (-not $releaseScriptText.Contains($requiredLine)) {
+      Add-Failure "$releaseScriptPath PR body must include checked verification item $requiredLine."
     }
   }
 }
@@ -323,6 +329,7 @@ $requiredFiles = @(
   ".github/workflows/ci.yml",
   ".github/workflows/codeql.yml",
   ".github/workflows/release.yml",
+  ".github/workflows/update-automerge-prs.yml",
   "AGENTS.md",
   "CLAUDE.md",
   "commitlint.config.cjs",
@@ -334,6 +341,7 @@ $requiredFiles = @(
   "LICENSES/MIT.txt",
   "LICENSES/Zlib.txt",
   "docs/development.md",
+  "docs/licensing.md",
   "docs/release.md",
   "docs/setup/manifest.md",
   "docs/setup/unattended.md",
@@ -385,6 +393,7 @@ $requiredFiles = @(
   "packages/nsis-naster-archive/src/resource.h",
   "tools/scripts/check-dco.ps1",
   "tools/scripts/conclude-release.ps1",
+  "tools/scripts/update-automerge-pr-branches.cjs",
   "tools/scripts/update-release-metadata.ps1",
   "tools/scripts/write-release-manifest.ps1"
 )

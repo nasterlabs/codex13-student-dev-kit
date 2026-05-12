@@ -391,7 +391,7 @@ NSIS Naster Archive package and the GPL-2.0-only XAMPP patch set. The installer
 also downloads third-party tools such as Visual Studio Code, Git for Windows and
 XAMPP; those tools are not relicensed by this project and remain governed by
 their own upstream license terms and notices. Third-party details are summarized
-in `docs/third-party.md`.
+in `docs/licensing.md` and `docs/third-party.md`.
 
 ## Contributing And Security
 
@@ -401,6 +401,7 @@ Contributions are welcome. This project uses [GitHub Flow](https://docs.github.c
 - [SECURITY.md](SECURITY.md) — reporting vulnerabilities privately
 - [SUPPORT.md](SUPPORT.md) — getting help
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — community standards
+- [docs/licensing.md](docs/licensing.md) — license and notice structure
 - [docs/third-party.md](docs/third-party.md) — third-party licenses
 
 ## Support
