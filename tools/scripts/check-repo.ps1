@@ -320,6 +320,7 @@ $requiredFiles = @(
   ".npmrc",
   ".zenodo.json",
   ".reuse/dep5",
+  ".github/actions/setup-node-pnpm/action.yml",
   ".github/CODEOWNERS",
   ".github/ISSUE_TEMPLATE/bug_report.yml",
   ".github/ISSUE_TEMPLATE/config.yml",

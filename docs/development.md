@@ -62,6 +62,11 @@ line use values like `0.7.0-alpha.<build_number>`.
 **CI** — set env vars directly in the CI environment (no file needed). Variables
 already in the process environment take precedence over any env file.
 
+GitHub Actions use `.github/actions/setup-node-pnpm` to set up the pinned pnpm
+and Node.js versions, then restore the shared pnpm cache before running
+`pnpm fetch` and offline installs. Keep Node and pnpm versions in that workflow
+wiring aligned with `package.json`.
+
 ### Debug log
 
 The installer can write a debug trace file next to the installer EXE. It is
