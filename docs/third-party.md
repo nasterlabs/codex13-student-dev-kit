@@ -13,6 +13,9 @@ does not relicense vendored binaries, upstream-derived patches, or tools that
 Setup downloads during installation. Those components remain governed by their
 own upstream license terms, notices and source-offer obligations.
 
+The repository license and notice structure is described in
+`docs/licensing.md`.
+
 ## Vendored In Repository
 
 | Component | Location | Purpose | Version | Origin | License | Classification | Source | Metadata updated |
