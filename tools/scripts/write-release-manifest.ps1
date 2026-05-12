@@ -378,16 +378,22 @@ function Get-ChangelogWhatChangedLines {
     $output = New-Object System.Collections.Generic.List[string]
     $copy = $false
     foreach ($line in $Lines) {
-        if ($line -match '^\s*###\s+.+Features') {
+        if ($line -match '^\s*###\s+(.+?)\s*$') {
+            $heading = $Matches[1]
+            if ($heading -match 'Highlights') {
+                $copy = $false
+                continue
+            }
+
+            if ($heading -match 'Release Assets') {
+                break
+            }
+
             $copy = $true
         }
 
         if (-not $copy) {
             continue
-        }
-
-        if ($line -match '^\s*###\s+.+Release Assets') {
-            break
         }
 
         if ($line -match '^\s*<!--') {
