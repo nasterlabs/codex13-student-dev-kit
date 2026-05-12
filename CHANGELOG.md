@@ -16,6 +16,95 @@ configured.
 
 <!-- New release entries go here -->
 
+<!-- BEGIN RELEASE v0.7.0-alpha.4 -->
+
+## 🚀 [0.7.0-alpha.4](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.4) - 2026-05-12
+
+This alpha release closes the `0.7.0-alpha` line before development moves to
+`0.7.1-alpha.0`. It focuses on release reliability, public project metadata,
+automated pull request maintenance, clearer repository documentation, and
+cleaner GitHub Release notes.
+
+### 🌟 Highlights
+
+- Closes the `0.7.0-alpha` line; follow-up development is expected to continue
+  on `0.7.1-alpha.0`.
+- Hardens release preparation by refreshing citation and archive metadata
+  automatically, then validating that public metadata stays aligned with the
+  package version.
+- Improves GitHub Release notes generation so manually wrapped changelog prose
+  renders as clean, flowing release text.
+- Reduces pull request queue maintenance with automerge branch updates,
+  workflow-safe skips, and clearer pull request metadata requirements.
+- Adds post-release automation that can open a separate next-version pull
+  request after the GitHub Release is published.
+
+### ✨ Features
+
+#### Release
+
+- Open post-release version bump PR by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#60](https://github.com/nasterlabs/codex13-student-dev-kit/pull/60).
+
+### 🐛 Fixes
+
+#### Ci
+
+- Skip workflow PRs in automerge updater by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#55](https://github.com/nasterlabs/codex13-student-dev-kit/pull/55).
+
+- Request write token for automerge branch updates by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#54](https://github.com/nasterlabs/codex13-student-dev-kit/pull/54).
+
+#### Release
+
+- Preserve unscoped changelog entries by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#59](https://github.com/nasterlabs/codex13-student-dev-kit/pull/59).
+
+- Keep release notes paragraphs unwrapped by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#57](https://github.com/nasterlabs/codex13-student-dev-kit/pull/57).
+
+- Generate retry changelog follow-ups by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#46](https://github.com/nasterlabs/codex13-student-dev-kit/pull/46).
+
+- Remove duplicate release notes heading by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#43](https://github.com/nasterlabs/codex13-student-dev-kit/pull/43).
+
+### 📝 Documentation
+
+#### General
+
+- Update agent and release metadata guidance by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#56](https://github.com/nasterlabs/codex13-student-dev-kit/pull/56).
+
+#### License
+
+- Document notice structure by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#45](https://github.com/nasterlabs/codex13-student-dev-kit/pull/45).
+
+#### Readme
+
+- Add transparency disclaimer by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#47](https://github.com/nasterlabs/codex13-student-dev-kit/pull/47).
+
+### 🏗️ Build, CI and Release Automation
+
+#### CI/CD
+
+- Centralize Node and pnpm setup by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#51](https://github.com/nasterlabs/codex13-student-dev-kit/pull/51).
+
+- Use offline pnpm installs by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#49](https://github.com/nasterlabs/codex13-student-dev-kit/pull/49).
+
+- Enforce pull request template details by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#53](https://github.com/nasterlabs/codex13-student-dev-kit/pull/53).
+
+- Update automerge pull request branches by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#50](https://github.com/nasterlabs/codex13-student-dev-kit/pull/50).
+
+### 🧹 Maintenance
+
+#### Ci
+
+- Use official setup-task action by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#44](https://github.com/nasterlabs/codex13-student-dev-kit/pull/44).
+
+#### Powershell
+
+- Format scripts by [@lukaszpiotrluczak](https://github.com/lukaszpiotrluczak) in [#48](https://github.com/nasterlabs/codex13-student-dev-kit/pull/48).
+
+### 📦 Release Assets
+
+- GitHub Release: [`v0.7.0-alpha.4`](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.4)
+
+<!-- END RELEASE v0.7.0-alpha.4 -->
+
 <!-- BEGIN RELEASE v0.7.0-alpha.3 -->
 
 ## 🚀 [0.7.0-alpha.3](https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.3) - 2026-05-11
