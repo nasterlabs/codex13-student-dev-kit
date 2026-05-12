@@ -99,6 +99,14 @@ async function listOpenPullRequests({ owner, name, token }) {
                 name
               }
             }
+            files(first: 100) {
+              nodes {
+                path
+              }
+              pageInfo {
+                hasNextPage
+              }
+            }
           }
         }
       }
@@ -121,6 +129,7 @@ function isEligiblePullRequest(pr, { repo, baseBranch, label }) {
   const labels = (pr.labels?.nodes || []).map((node) => node.name.toLowerCase());
   const hasLabel = labels.includes(label.toLowerCase());
   const hasAutoMerge = Boolean(pr.autoMergeRequest);
+  const filePaths = (pr.files?.nodes || []).map((node) => node.path);
 
   if (!hasAutoMerge && !hasLabel) {
     return { eligible: false, reason: `missing auto-merge and ${label} label` };
@@ -136,6 +145,14 @@ function isEligiblePullRequest(pr, { repo, baseBranch, label }) {
 
   if (pr.headRepository?.nameWithOwner !== repo) {
     return { eligible: false, reason: `head repository is ${pr.headRepository?.nameWithOwner || '(deleted)'}` };
+  }
+
+  if (pr.files?.pageInfo?.hasNextPage) {
+    return { eligible: false, reason: 'too many changed files to check workflow safety automatically' };
+  }
+
+  if (filePaths.some((path) => path.startsWith('.github/workflows/'))) {
+    return { eligible: false, reason: 'changes GitHub workflow files' };
   }
 
   return { eligible: true, reason: hasAutoMerge ? 'auto-merge enabled' : `${label} label` };
@@ -199,8 +216,8 @@ async function updatePullRequestBranch({ repo, token, pr, dryRun }) {
   if (isPermissionLikeUpdateFailure(response.status, body)) {
     throw new Error(
       `Failed to update #${pr.number}: GitHub App token cannot update pull request branches. ` +
-        'Grant the app Contents: Read and write and Pull requests: Read and write, then request ' +
-        '`permission-contents: write` and `permission-pull-requests: write` in the workflow.',
+        'Grant the app Contents: Read and write and Pull requests: Read and write, ' +
+        'then request the matching `permission-*` inputs in the workflow.',
     );
   }
 

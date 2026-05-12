@@ -253,7 +253,8 @@ The workflow updates open pull request branches when either:
 
 Only pull requests targeting `main` and using branches from this repository are
 updated. Fork pull requests, draft pull requests, pull requests targeting other
-branches, and pull requests without auto-merge or the label are skipped.
+branches, pull requests without auto-merge or the label, and pull requests that
+change `.github/workflows/*` are skipped.
 
 The updater calls GitHub's pull request branch update API, which merges the
 latest `main` into the pull request branch. That new branch update re-runs the
@@ -263,6 +264,12 @@ and checks pass.
 If GitHub reports that a branch cannot be updated cleanly, the workflow logs the
 conflict and continues with the next pull request instead of blocking the whole
 queue. Resolve that pull request manually.
+
+Pull requests that change workflow files are skipped intentionally. Updating
+those branches through the API requires the GitHub App `Workflows: Read and
+write` permission, which is broader than this updater needs for the normal PR
+queue. Update those pull requests manually or merge them before re-running the
+updater.
 
 The workflow uses the same GitHub App credentials as the release tag workflow:
 repository variable `APP_CLIENT_ID` and repository secret `APP_PRIVATE_KEY`.
