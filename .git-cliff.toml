@@ -208,12 +208,29 @@ _No developer tooling dependency updates._
 {% if commit.scope %}{% set_global has_scoped_commits = true %}{% endif %}
 {% endfor %}
 {% if has_scoped_commits %}
+{% set_global has_unscoped_commits = false %}
+{% for commit in group_commits %}
+{% if not commit.scope %}{% set_global has_unscoped_commits = true %}{% endif %}
+{% endfor %}
+{% if has_unscoped_commits %}
+#### General
+
+{% for commit in group_commits %}
+{% if not commit.scope %}
+{% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
+- {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
+{% endfor %}
+{% endif %}
+
 {% for scope, scoped_commits in group_commits | group_by(attribute="scope") %}
 #### {% if scope %}{{ scope | replace(from="-", to=" ") | title }}{% else %}General{% endif %}
 
 {% for commit in scoped_commits %}
+{% if commit.scope %}
 {% set title = commit.remote.pr_title | default(value=commit.message) | split(pat=" (#") | first | split(pat=": ") | last %}
 - {{ title | upper_first }} by {% if commit.remote.username %}[@{{ commit.remote.username }}]({% if commit.remote.username == "dependabot[bot]" %}https://github.com/apps/dependabot{% else %}https://github.com/{{ commit.remote.username }}{% endif %}){% else %}{{ commit.author.name | default(value="unknown author") }}{% endif %} in {% if commit.remote.pr_number %}[#{{ commit.remote.pr_number }}](https://github.com/nasterlabs/codex13-student-dev-kit/pull/{{ commit.remote.pr_number }}){% else %}[{{ commit.id | truncate(length=7, end="") }}](https://github.com/nasterlabs/codex13-student-dev-kit/commit/{{ commit.id }}){% endif %}.
+{% endif %}
 {% endfor %}
 {% endfor %}
 {% else %}
