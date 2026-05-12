@@ -63,9 +63,9 @@ line use values like `0.7.0-alpha.<build_number>`.
 already in the process environment take precedence over any env file.
 
 GitHub Actions use `.github/actions/setup-node-pnpm` to set up the pinned pnpm
-and Node.js versions, then restore the shared pnpm cache before running
-`pnpm fetch` and offline installs. Keep Node and pnpm versions in that workflow
-wiring aligned with `package.json`.
+and Node.js versions. `actions/setup-node` restores the shared pnpm cache before
+the workflows run `pnpm fetch` and offline installs. Keep Node and pnpm versions
+in that workflow wiring aligned with `package.json`.
 
 ### Debug log
 
@@ -247,8 +247,8 @@ The permissions requested are not granted to this installation.
 
 ## Automated Pull Request Updates
 
-The repository keeps branch protection configured to require pull request
-branches to be up to date before merge. To reduce manual queue maintenance,
+The repository ruleset requires pull request branches to be up to date before
+merge. To reduce manual queue maintenance,
 `.github/workflows/update-automerge-prs.yml` runs after every push to `main`.
 
 The workflow updates open pull request branches when either:
