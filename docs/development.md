@@ -198,6 +198,38 @@ Editing from WSL is fine. The actual build targets Windows tooling, so run Task
 from PowerShell 7, Windows Terminal, or an environment where `NSIS_PATH`
 resolves to a Windows `makensis.exe`.
 
+## Automated Pull Request Updates
+
+The repository keeps branch protection configured to require pull request
+branches to be up to date before merge. To reduce manual queue maintenance,
+`.github/workflows/update-automerge-prs.yml` runs after every push to `main`.
+
+The workflow updates open pull request branches when either:
+
+- GitHub auto-merge is enabled for the pull request.
+- The pull request has the `automerge` label.
+
+Only pull requests targeting `main` and using branches from this repository are
+updated. Fork pull requests, draft pull requests, pull requests targeting other
+branches, and pull requests without auto-merge or the label are skipped.
+
+The updater calls GitHub's pull request branch update API, which merges the
+latest `main` into the pull request branch. That new branch update re-runs the
+required checks, allowing GitHub auto-merge to finish once the branch is current
+and checks pass.
+
+If GitHub reports that a branch cannot be updated cleanly, the workflow logs the
+conflict and continues with the next pull request instead of blocking the whole
+queue. Resolve that pull request manually.
+
+The workflow uses the same GitHub App credentials as the release tag workflow:
+repository variable `APP_CLIENT_ID` and repository secret `APP_PRIVATE_KEY`.
+Using a GitHub App token keeps branch updates capable of triggering the normal
+pull request checks.
+
+To test the candidate set without updating branches, run the workflow manually
+with `dry_run` enabled.
+
 ## Encoding
 
 `apps/setup/src/nsis/Codex13StudentDevKit.nsi` contains Polish UI strings and is compiled
