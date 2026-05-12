@@ -20,6 +20,26 @@ user-selected folder. The first public alpha installs portable VS Code, and in
 the classroom profile also portable Git and XAMPP, without requiring
 administrator rights when the target folder is writable.
 
+> [!IMPORTANT]
+>
+> ## 🛠️ Transparency Disclaimer
+>
+> This repository is maintained in the open, including the imperfect parts of
+> real software work: failed experiments, broken workflow runs, hurried fixes,
+> accidental regressions, and decisions that only became obvious in hindsight.
+>
+> We do not rewrite history just to make the project look cleaner than it was.
+> If something went wrong, it may remain visible in commits, pull requests,
+> issues, workflow logs, tags or release artifacts.
+>
+> That is intentional. This project is also an educational record of how
+> developer tooling is built over time: environments drift, CI catches surprises,
+> infrastructure fails in creative ways, and sometimes a fix works locally before
+> it works everywhere else.
+>
+> In short: this is a living engineering project, not a polished marketing
+> artifact pretending everything always goes according to plan.
+
 ## What Is This?
 
 Codex 13 Student Dev Kit helps prepare clean, repeatable development
