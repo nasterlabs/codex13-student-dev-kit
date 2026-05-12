@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 
@@ -34,8 +34,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Check lockfile was not modified
         shell: bash
@@ -74,8 +77,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Validate PR title
         if: >
@@ -127,8 +133,11 @@ jobs:
           node-version: 24.15.0
           cache: pnpm
 
+      - name: Fetch dependencies
+        run: pnpm fetch --frozen-lockfile
+
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --offline
 
       - name: Check lockfile was not modified
         shell: bash
@@ -181,7 +190,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Install Task
-        uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
         with:
           repo-token: ${{ github.token }}
 

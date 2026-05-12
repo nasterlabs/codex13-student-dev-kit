@@ -179,9 +179,12 @@ task release:check-state RELEASE_BRANCH=release/v0.7.0-alpha.1
 The tag workflow creates a GitHub App installation token with
 `actions/create-github-app-token`. Configure repository variable
 `APP_CLIENT_ID` and repository secret `APP_PRIVATE_KEY` for an app installation
-that can write repository contents. Do not use the workflow `GITHUB_TOKEN` for
-this job: GitHub does not start new `push` workflow runs from tags pushed by
-`GITHUB_TOKEN`, so the release workflow would not start automatically.
+that can write repository contents. The shared repository GitHub App setup,
+including required permissions, is documented in
+[`docs/development.md`](development.md#repository-github-app). Do not use the
+workflow `GITHUB_TOKEN` for this job: GitHub does not start new `push` workflow
+runs from tags pushed by `GITHUB_TOKEN`, so the release workflow would not start
+automatically.
 
 ## Changelog Preparation
 
