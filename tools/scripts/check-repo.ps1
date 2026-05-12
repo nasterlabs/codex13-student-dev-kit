@@ -240,9 +240,15 @@ function Assert-ReleaseConcludeAutomation {
     Add-Failure "$releaseScriptPath must create release commits with DCO sign-off."
   }
 
-  foreach ($requiredSection in @("## Summary", "## Verification")) {
+  foreach ($requiredSection in @("Summary", "Verification", "Notes")) {
     if (-not $releaseScriptText.Contains($requiredSection)) {
       Add-Failure "$releaseScriptPath PR body must include $requiredSection."
+    }
+  }
+
+  foreach ($requiredLine in @("- [x] ``task check``", "- [x] ``git diff --check``")) {
+    if (-not $releaseScriptText.Contains($requiredLine)) {
+      Add-Failure "$releaseScriptPath PR body must include checked verification item $requiredLine."
     }
   }
 }

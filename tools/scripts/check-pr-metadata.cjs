@@ -36,12 +36,30 @@ if (isDependencyBotPr && normalizedBody) {
 }
 
 function getSection(text, heading) {
-  const pattern = new RegExp(
-    `^## ${heading}\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|$)`,
-    'm',
-  );
-  const match = text.match(pattern);
-  return match ? match[1].trim() : '';
+  const lines = text.split('\n');
+  let start = -1;
+  let end = lines.length;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    const match = line.match(/^##\s+(.+?)\s*$/);
+    if (!match) {
+      continue;
+    }
+
+    const normalizedHeading = match[1].replace(/^[^A-Za-z0-9]+/, '').trim();
+    if (start < 0 && normalizedHeading === heading) {
+      start = index + 1;
+      continue;
+    }
+
+    if (start >= 0) {
+      end = index;
+      break;
+    }
+  }
+
+  return start >= 0 ? lines.slice(start, end).join('\n').trim() : '';
 }
 
 const summary = getSection(normalizedBody, 'Summary');
@@ -49,20 +67,50 @@ if (!summary || /^-\s*$/.test(summary)) {
   errors.push('Pull request body must include a non-placeholder Summary section.');
 }
 
+function getNonEmptyLines(section) {
+  return section
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 const verification = getSection(normalizedBody, 'Verification');
 if (!verification) {
   errors.push('Pull request body must include a Verification section.');
 } else {
-  const meaningfulVerificationLines = verification
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !/^- \[ \] /.test(line));
+  const verificationLines = getNonEmptyLines(verification);
+  const checklistLines = verificationLines.filter((line) => /^- \[[ xX]\] .+/.test(line));
+  const checkedLines = checklistLines.filter((line) => /^- \[[xX]\] .+/.test(line));
 
-  if (meaningfulVerificationLines.length === 0) {
+  if (checklistLines.length === 0) {
+    errors.push('Pull request body Verification section must use checklist items.');
+  }
+
+  if (checkedLines.length === 0) {
     errors.push(
-      'Pull request body Verification section must include completed checks or explicit verification notes.',
+      'Pull request body Verification section must include at least one completed checklist item.',
     );
+  }
+
+  for (const line of checkedLines) {
+    if (/^- \[[xX]\]\s+(task|pnpm|git|pwsh|node|gh|act)\b/.test(line)) {
+      errors.push(`Verification command must be wrapped in backticks: ${line}`);
+    }
+  }
+}
+
+const notes = getSection(normalizedBody, 'Notes');
+if (!notes) {
+  errors.push('Pull request body must include a Notes section.');
+} else {
+  const noteLines = getNonEmptyLines(notes);
+  if (noteLines.length === 0) {
+    errors.push('Pull request body Notes section must include checklist items or explicit notes.');
+  }
+
+  const malformedChecklistLines = noteLines.filter((line) => line.startsWith('- [') && !/^- \[[ xX]\] .+/.test(line));
+  for (const line of malformedChecklistLines) {
+    errors.push(`Notes checklist item is malformed: ${line}`);
   }
 }
 
