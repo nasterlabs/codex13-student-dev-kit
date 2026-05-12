@@ -7,7 +7,7 @@ This repository uses GitHub Flow and Conventional Commits.
 The installer product version core is defined in `apps/setup/src/nsis/config.nsh`:
 
 ```nsis
-!define APP_VERSION "0.7.0"
+!define APP_VERSION "0.7.1"
 ```
 
 `package.json` stores the repository package version used by tooling and release
@@ -17,29 +17,29 @@ preparation. The actual installer build version is resolved by
 `APP_VERSION` is the source of truth for the installer version core
 (`major.minor.patch`). Release tags and manual release workflow test versions
 may add prerelease or build metadata, but their SemVer core must match
-`APP_VERSION`. For example, while `APP_VERSION` is `0.7.0`, these versions are
+`APP_VERSION`. For example, while `APP_VERSION` is `0.7.1`, these versions are
 valid release workflow inputs:
 
 ```text
-v0.7.0-alpha.1
-v0.7.0-alpha.1+test.0
+v0.7.1-alpha.1
+v0.7.1-alpha.1+test.0
 ```
 
-This version is rejected until `APP_VERSION` is updated to `0.7.1` in
+This version is rejected until `APP_VERSION` is updated to `0.7.2` in
 `apps/setup/src/nsis/config.nsh`:
 
 ```text
-v0.7.1-alpha.1
+v0.7.2-alpha.1
 ```
 
 Before starting a release PR, create a release branch and prepare the mechanical
 version/changelog changes:
 
 ```powershell
-task release:prepare TAG=v0.7.0-alpha.1
+task release:prepare TAG=v0.7.1-alpha.1
 ```
 
-This creates `release/v0.7.0-alpha.1` from `origin/main`, updates versioned
+This creates `release/v0.7.1-alpha.1` from `origin/main`, updates versioned
 source files, including `APP_VERSION` in `apps/setup/src/nsis/config.nsh` when
 the SemVer core changes, updates `package.json`, refreshes citation/archive
 metadata, and inserts a generated changelog section after the
@@ -53,13 +53,13 @@ After that:
 4. Conclude the release branch:
 
    ```powershell
-   task release:conclude TAG=v0.7.0-alpha.1
+   task release:conclude TAG=v0.7.1-alpha.1
    ```
 
    Add `OPEN_PR=1` to push the branch and open the PR with GitHub CLI:
 
    ```powershell
-   task release:conclude TAG=v0.7.0-alpha.1 OPEN_PR=1
+   task release:conclude TAG=v0.7.1-alpha.1 OPEN_PR=1
    ```
 
    When a release closes a version line and `main` should move to the next
@@ -67,7 +67,7 @@ After that:
    `NEXT_VERSION`:
 
    ```powershell
-   task release:conclude TAG=v0.7.0-alpha.4 NEXT_VERSION=0.7.1-alpha.0 OPEN_PR=1
+   task release:conclude TAG=v0.7.1-alpha.4 NEXT_VERSION=0.7.2-alpha.0 OPEN_PR=1
    ```
 
 `release:conclude` validates `package.json`, `APP_VERSION`, release metadata,
@@ -87,7 +87,7 @@ message for a `Release-Next-Version` trailer. If present, it opens a separate
 pull request that starts the next development version:
 
 ```text
-Release-Next-Version: 0.7.1-alpha.0
+Release-Next-Version: 0.7.2-alpha.0
 ```
 
 The follow-up pull request is intentionally separate from the release PR. It
@@ -97,13 +97,13 @@ documentation, then lets normal branch protection and CI validate the change.
 The same bump can be prepared manually when needed:
 
 ```powershell
-task release:bump-next NEXT_VERSION=0.7.1-alpha.0
+task release:bump-next NEXT_VERSION=0.7.2-alpha.0
 ```
 
 Add `OPEN_PR=1` to have the helper commit, push and open the PR:
 
 ```powershell
-task release:bump-next NEXT_VERSION=0.7.1-alpha.0 OPEN_PR=1
+task release:bump-next NEXT_VERSION=0.7.2-alpha.0 OPEN_PR=1
 ```
 
 ## Failed Alpha Release Recovery
@@ -112,14 +112,14 @@ Alpha suffixes are intentionally monotonic. If a release PR was merged but the
 tag or release workflow failed before publishing a GitHub Release, do not reuse
 the same tag. Prepare the next alpha number instead.
 
-For example, if `v0.7.0-alpha.1` was merged to `main` but no tag and no GitHub
+For example, if `v0.7.1-alpha.1` was merged to `main` but no tag and no GitHub
 Release were published, recover with:
 
 ```powershell
-task release:retry TAG=v0.7.0-alpha.2 SUPERSEDE_TAG=v0.7.0-alpha.1
+task release:retry TAG=v0.7.1-alpha.2 SUPERSEDE_TAG=v0.7.1-alpha.1
 ```
 
-This creates `release/v0.7.0-alpha.2` from `origin/main`, updates versioned
+This creates `release/v0.7.1-alpha.2` from `origin/main`, updates versioned
 files, and moves the existing changelog section from the failed tag to the
 new tag. It does not add a second copy of the changelog entry, so the next
 published release reads as if the failed alpha was never released.
@@ -140,7 +140,7 @@ After the retry branch is created:
 4. Conclude and open the release PR:
 
    ```powershell
-   task release:conclude TAG=v0.7.0-alpha.2 OPEN_PR=1
+   task release:conclude TAG=v0.7.1-alpha.2 OPEN_PR=1
    ```
 
 If a tag exists but the GitHub Release failed, inspect the failed run before
@@ -151,13 +151,13 @@ artifacts were not published and the tag points to the intended commit.
 The first public release line uses a numeric alpha build suffix:
 
 ```text
-0.7.0-alpha.<build_number>
+0.7.1-alpha.<build_number>
 ```
 
 Release tags must use:
 
 ```text
-v0.7.0-alpha.<build_number>
+v0.7.1-alpha.<build_number>
 ```
 
 These first alpha releases are intended to be stable enough for release
@@ -180,7 +180,7 @@ chore(release): prepare vX.Y.Z
 For example:
 
 ```text
-chore(release): prepare v0.7.0-alpha.1
+chore(release): prepare v0.7.1-alpha.1
 ```
 
 After the release PR is merged to `main`, `.github/workflows/tag-release.yml`
@@ -210,7 +210,7 @@ the tag creation step.
 Local validation uses the same release-state checker:
 
 ```powershell
-task release:check-state RELEASE_BRANCH=release/v0.7.0-alpha.1
+task release:check-state RELEASE_BRANCH=release/v0.7.1-alpha.1
 ```
 
 The tag workflow creates a GitHub App installation token with
@@ -232,17 +232,17 @@ wording, remove noise, add context or regroup entries before merge.
 Preview the generated changelog section:
 
 ```powershell
-pnpm changelog --tag v0.7.0-alpha.1
+pnpm changelog --tag v0.7.1-alpha.1
 ```
 
 Prepare a release changelog section by inserting it into `CHANGELOG.md`:
 
 ```powershell
-pnpm changelog:write --tag v0.7.0-alpha.1
+pnpm changelog:write --tag v0.7.1-alpha.1
 ```
 
 The `--tag` value controls the generated section heading. For example,
-`--tag v0.7.0-alpha.1` produces `## [0.7.0-alpha.1] - <date>` instead of
+`--tag v0.7.1-alpha.1` produces `## [0.7.1-alpha.1] - <date>` instead of
 `## [Unreleased]`. The changelog write command inserts the generated section
 immediately after the `<!-- New release entries go here -->` marker, leaving the
 existing changelog body below it intact. If the same version already exists in
@@ -256,7 +256,7 @@ reviewed in the release PR.
 The full release branch helper wraps this changelog command:
 
 ```powershell
-task release:prepare TAG=v0.7.0-alpha.1
+task release:prepare TAG=v0.7.1-alpha.1
 ```
 
 ## Local Release Build
@@ -276,9 +276,9 @@ The release installer is written to:
 dist\setup\Codex13SDK-Setup.exe
 ```
 
-For local release builds, set `BUILD_VERSION=0.7.0-alpha.<build_number>` in
+For local release builds, set `BUILD_VERSION=0.7.1-alpha.<build_number>` in
 `.env.prod` when preparing a public candidate. If omitted, the build script uses
-`0.7.0-alpha.local`, which is only for local validation.
+`0.7.1-alpha.local`, which is only for local validation.
 
 ## GitHub Release
 
@@ -298,7 +298,7 @@ The release workflow:
 
 On tag builds, the workflow derives `BUILD_VERSION` from the tag name. Manual
 workflow dispatch can use an explicit test version such as
-`v0.7.0-alpha.1+test.0`; if the field is empty, the workflow uses
+`v0.7.1-alpha.1+test.0`; if the field is empty, the workflow uses
 `v<APP_VERSION>-alpha.<github_run_number>`.
 
 ## Release Manifest
@@ -345,7 +345,7 @@ matches the published artifact:
 Use the metadata helper before creating a public release tag:
 
 ```powershell
-task release:metadata -- -BuildVersion 0.7.0-alpha.<build_number>
+task release:metadata -- -BuildVersion 0.7.1-alpha.<build_number>
 ```
 
 `task release:prepare` runs the same helper for the release branch so the
@@ -359,7 +359,7 @@ next metadata commit or release metadata refresh.
 
 ## Authenticode Signing
 
-The first `0.7.0-alpha.<build_number>` releases ship unsigned. Signing will be
+The first `0.7.1-alpha.<build_number>` releases ship unsigned. Signing will be
 added in a follow-up release once a certificate is in place. Until that is done,
 every public release remains an alpha release.
 
