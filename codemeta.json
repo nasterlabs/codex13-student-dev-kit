@@ -11,10 +11,10 @@
   "codeRepository": "https://github.com/nasterlabs/codex13-student-dev-kit",
   "url": "https://codex13.dev/student-dev-kit",
   "issueTracker": "https://github.com/nasterlabs/codex13-student-dev-kit/issues",
-  "downloadUrl": "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.3",
+  "downloadUrl": "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/v0.7.0-alpha.4",
   "developmentStatus": "active",
-  "version": "0.7.0-alpha.3",
-  "datePublished": "2026-05-11",
+  "version": "0.7.0-alpha.4",
+  "datePublished": "2026-05-12",
   "keywords": [
     "education",
     "developer-tools",
@@ -119,6 +119,6 @@
       "audienceType": "Workshop participants"
     }
   ],
-  "releaseNotes": "Release metadata for Codex 13 Student Dev Kit 0.7.0-alpha.3. See the GitHub Release for installer artifacts, checksums, release notes and manifest.",
+  "releaseNotes": "Release metadata for Codex 13 Student Dev Kit 0.7.0-alpha.4. See the GitHub Release for installer artifacts, checksums, release notes and manifest.",
   "readme": "https://github.com/nasterlabs/codex13-student-dev-kit#readme"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@nasterlabs/codex13-student-dev-kit",
-  "version": "0.7.0-alpha.3",
+  "version": "0.7.0-alpha.4",
   "private": true,
   "description": "Windows NSIS installer for Codex 13 Student Dev Kit.",
   "license": "Apache-2.0",
