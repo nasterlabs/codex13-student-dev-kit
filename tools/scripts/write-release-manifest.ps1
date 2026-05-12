@@ -294,7 +294,17 @@ function Get-ParagraphBeforeHeading {
         [string] $HeadingPattern
     )
 
-    $collected = New-Object System.Collections.Generic.List[string]
+    $paragraphs = New-Object System.Collections.Generic.List[string]
+    $currentParagraph = New-Object System.Collections.Generic.List[string]
+    function Add-CurrentParagraph {
+        if ($currentParagraph.Count -eq 0) {
+            return
+        }
+
+        $paragraphs.Add(($currentParagraph -join " ").Trim())
+        $currentParagraph.Clear()
+    }
+
     foreach ($line in $Lines) {
         if ($line -match $HeadingPattern) {
             break
@@ -305,15 +315,16 @@ function Get-ParagraphBeforeHeading {
         }
 
         if (-not [string]::IsNullOrWhiteSpace($line)) {
-            $collected.Add($line.Trim())
+            $currentParagraph.Add($line.Trim())
+        }
+        else {
+            Add-CurrentParagraph
         }
     }
 
-    if ($collected.Count -eq 0) {
-        return @()
-    }
+    Add-CurrentParagraph
 
-    return @(($collected -join "`n") -split "`n")
+    return $paragraphs.ToArray()
 }
 
 function Get-ListItemsInHeading {
