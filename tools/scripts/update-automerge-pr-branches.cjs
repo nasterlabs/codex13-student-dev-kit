@@ -155,6 +155,12 @@ function isConflictLikeUpdateFailure(status, body) {
   );
 }
 
+function isPermissionLikeUpdateFailure(status, body) {
+  const message = typeof body?.message === 'string' ? body.message.toLowerCase() : '';
+
+  return status === 403 && message.includes('resource not accessible by integration');
+}
+
 async function updatePullRequestBranch({ repo, token, pr, dryRun }) {
   if (dryRun) {
     console.log(`DRY-RUN: would update #${pr.number} (${pr.headRefName}) at ${pr.headRefOid}`);
@@ -188,6 +194,14 @@ async function updatePullRequestBranch({ repo, token, pr, dryRun }) {
   if (isConflictLikeUpdateFailure(response.status, body)) {
     console.log(`SKIPPED: #${pr.number} cannot be updated cleanly: ${body?.message || response.status}`);
     return { status: 'conflict' };
+  }
+
+  if (isPermissionLikeUpdateFailure(response.status, body)) {
+    throw new Error(
+      `Failed to update #${pr.number}: GitHub App token cannot update pull request branches. ` +
+        'Grant the app Contents: Read and write and Pull requests: Read and write, then request ' +
+        '`permission-contents: write` and `permission-pull-requests: write` in the workflow.',
+    );
   }
 
   throw new Error(`Failed to update #${pr.number}: ${response.status} ${JSON.stringify(body)}`);

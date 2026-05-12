@@ -207,6 +207,39 @@ Editing from WSL is fine. The actual build targets Windows tooling, so run Task
 from PowerShell 7, Windows Terminal, or an environment where `NSIS_PATH`
 resolves to a Windows `makensis.exe`.
 
+## Repository GitHub App
+
+Repository automation that must push tags or update pull request branches uses a
+dedicated GitHub App instead of the workflow `GITHUB_TOKEN`. GitHub does not
+start follow-up workflow runs for refs pushed by `GITHUB_TOKEN`, so release tags
+created with that token would not start the release workflow.
+
+Configure these repository Actions settings:
+
+| Setting | Type | Description |
+| --- | --- | --- |
+| `APP_CLIENT_ID` | Variable | GitHub App client ID used by `actions/create-github-app-token`. |
+| `APP_PRIVATE_KEY` | Secret | Private key PEM generated for the GitHub App. |
+
+Install the app on this repository and grant these repository permissions:
+
+| Permission | Access | Used by |
+| --- | --- | --- |
+| `Contents` | Read and write | Creating release tags and updating PR branches. |
+| `Pull requests` | Read and write | Calling GitHub's PR branch update API. |
+
+`Metadata: Read-only` is always included by GitHub App installations. No
+organization-wide installation is required; repository-only installation is
+preferred.
+
+After changing GitHub App permissions, approve or refresh the app installation
+for the repository. Until the installation accepts the new permissions,
+`actions/create-github-app-token` fails with:
+
+```text
+The permissions requested are not granted to this installation.
+```
+
 ## Automated Pull Request Updates
 
 The repository keeps branch protection configured to require pull request
@@ -233,8 +266,10 @@ queue. Resolve that pull request manually.
 
 The workflow uses the same GitHub App credentials as the release tag workflow:
 repository variable `APP_CLIENT_ID` and repository secret `APP_PRIVATE_KEY`.
-Using a GitHub App token keeps branch updates capable of triggering the normal
-pull request checks.
+The app permissions are documented in [Repository GitHub App](#repository-github-app).
+The workflow requests only the required write permissions when minting the
+installation token. Using a GitHub App token keeps branch updates capable of
+triggering the normal pull request checks.
 
 To test the candidate set without updating branches, run the workflow manually
 with `dry_run` enabled.
