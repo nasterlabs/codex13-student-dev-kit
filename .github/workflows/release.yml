@@ -494,3 +494,72 @@ jobs:
           }
 
           gh release create @releaseArgs
+
+  post-release-version:
+    name: Open next-version PR
+    runs-on: windows-latest
+    needs: release
+    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.2.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout main
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Install Task
+        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        with:
+          repo-token: ${{ github.token }}
+
+      - name: Resolve next version from release tag
+        id: next-version
+        shell: pwsh
+        run: |
+          git fetch --tags --force
+          $tagMessage = @(git for-each-ref "refs/tags/$env:GITHUB_REF_NAME" "--format=%(contents)") -join "`n"
+          $match = [regex]::Match($tagMessage, '(?m)^Release-Next-Version:\s*(?<version>\S+)\s*$')
+          if (-not $match.Success) {
+            "should_bump=false" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            "next_version=" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            Write-Host "Release tag does not request a post-release next-version PR."
+            return
+          }
+
+          $nextVersion = $match.Groups["version"].Value.Trim().TrimStart("v")
+          $semverPattern = '^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$'
+          if ($nextVersion -notmatch $semverPattern) {
+            throw "Release-Next-Version from tag must be valid SemVer. Actual: $nextVersion"
+          }
+
+          "should_bump=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+          "next_version=$nextVersion" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+          Write-Host "Post-release next version requested: $nextVersion"
+
+      - name: Configure Git author
+        if: ${{ steps.next-version.outputs.should_bump == 'true' }}
+        shell: pwsh
+        run: |
+          git config user.name "nasterlabs-release-bot[bot]"
+          git config user.email "nasterlabs-release-bot[bot]@users.noreply.github.com"
+
+      - name: Open next-version pull request
+        if: ${{ steps.next-version.outputs.should_bump == 'true' }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          NEXT_VERSION: ${{ steps.next-version.outputs.next_version }}
+        run: task release:bump-next NEXT_VERSION=$env:NEXT_VERSION OPEN_PR=1 SKIP_CHECKS=1

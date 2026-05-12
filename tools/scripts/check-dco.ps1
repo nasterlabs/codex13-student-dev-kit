@@ -163,6 +163,16 @@ function Test-IsBotAuthor {
     return $Author.Name -match "\[bot\]$" -or $Author.Email -match "(?i)(\[bot\]|bot@|support@github\.com|noreply\.github\.com)$"
 }
 
+function Test-IsTrustedUnsignedAutomationAuthor {
+    param(
+        [Parameter(Mandatory = $true)]
+        [pscustomobject] $Author
+    )
+
+    return $Author.Name -eq "nasterlabs-release-bot[bot]" -and
+        $Author.Email -eq "nasterlabs-release-bot[bot]@users.noreply.github.com"
+}
+
 function Test-AuthorSignOff {
     param(
         [Parameter(Mandatory = $true)]
@@ -220,7 +230,10 @@ foreach ($commit in $commits) {
         $failed = $true
     }
 
-    if ($RequireVerifiedSignatures -and -not (Test-CommitSignature -Commit $commit)) {
+    $author = Get-CommitAuthor -Commit $commit
+    if ($RequireVerifiedSignatures -and
+        -not (Test-IsTrustedUnsignedAutomationAuthor -Author $author) -and
+        -not (Test-CommitSignature -Commit $commit)) {
         $failed = $true
     }
 }
