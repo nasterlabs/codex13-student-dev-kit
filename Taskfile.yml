@@ -49,13 +49,13 @@ tasks:
       - task: build:prod
 
   release:metadata:
-    desc: Update citation/archive metadata; pass CLI_ARGS="-BuildVersion 0.7.0-alpha.1"
+    desc: Update citation/archive metadata; normally handled by release:prepare; pass CLI_ARGS="-BuildVersion 0.7.0-alpha.1"
     platforms: [windows]
     cmds:
       - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/update-release-metadata.ps1 {{.CLI_ARGS}}
 
   release:prepare:
-    desc: Create a release branch, update versions and insert a changelog section; pass TAG=v0.7.0-alpha.1 or omit TAG for prompt
+    desc: Create a release branch, update versions, refresh release metadata and insert a changelog section; pass TAG=v0.7.0-alpha.1 or omit TAG for prompt
     platforms: [windows]
     vars:
       TAG: '{{.TAG | default ""}}'

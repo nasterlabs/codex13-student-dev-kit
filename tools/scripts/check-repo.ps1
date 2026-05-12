@@ -212,6 +212,74 @@ function Assert-VersionConsistency {
     }
 }
 
+function Assert-ReleaseMetadataConsistency {
+    $packageText = Get-FileText -RelativePath "package.json"
+    $citationText = Get-FileText -RelativePath "CITATION.cff"
+    $zenodoText = Get-FileText -RelativePath ".zenodo.json"
+    $codemetaText = Get-FileText -RelativePath "codemeta.json"
+
+    try {
+        $packageJson = $packageText | ConvertFrom-Json
+        $packageVersion = [string] $packageJson.version
+    }
+    catch {
+        Add-Failure "Cannot parse package.json while checking release metadata: $_"
+        return
+    }
+
+    try {
+        $zenodoJson = $zenodoText | ConvertFrom-Json
+        $zenodoVersion = [string] $zenodoJson.version
+    }
+    catch {
+        Add-Failure "Cannot parse .zenodo.json: $_"
+        return
+    }
+
+    try {
+        $codemetaJson = $codemetaText | ConvertFrom-Json
+        $codemetaVersion = [string] $codemetaJson.version
+        $codemetaDownloadUrl = [string] $codemetaJson.downloadUrl
+        $codemetaReleaseNotes = [string] $codemetaJson.releaseNotes
+    }
+    catch {
+        Add-Failure "Cannot parse codemeta.json: $_"
+        return
+    }
+
+    $citationVersionMatch = [regex]::Match($citationText, '(?m)^version:\s*(?<version>\S+)\s*$')
+    if (-not $citationVersionMatch.Success) {
+        Add-Failure "CITATION.cff does not contain a top-level version field."
+        return
+    }
+
+    $citationVersion = $citationVersionMatch.Groups["version"].Value.Trim("'`"")
+    $expectedTag = "v$packageVersion"
+    $expectedReleaseUrl = "https://github.com/nasterlabs/codex13-student-dev-kit/releases/tag/$expectedTag"
+
+    foreach ($metadata in @(
+            @{ Path = "CITATION.cff"; Version = $citationVersion },
+            @{ Path = ".zenodo.json"; Version = $zenodoVersion },
+            @{ Path = "codemeta.json"; Version = $codemetaVersion }
+        )) {
+        if ($metadata.Version -ne $packageVersion) {
+            Add-Failure "$($metadata.Path) version ($($metadata.Version)) must match package.json version ($packageVersion)."
+        }
+    }
+
+    if (-not $citationText.Contains($expectedReleaseUrl)) {
+        Add-Failure "CITATION.cff must reference $expectedReleaseUrl."
+    }
+
+    if ($codemetaDownloadUrl -ne $expectedReleaseUrl) {
+        Add-Failure "codemeta.json downloadUrl ($codemetaDownloadUrl) must be $expectedReleaseUrl."
+    }
+
+    if (-not $codemetaReleaseNotes.Contains($packageVersion)) {
+        Add-Failure "codemeta.json releaseNotes must mention $packageVersion."
+    }
+}
+
 function Assert-ApacheLicenseText {
     $expectedApacheLicenseSha256 = "CFC7749B96F63BD31C3C42B5C471BF756814053E847C10F3EB003417BC523D30"
 
@@ -443,6 +511,7 @@ if ($textFiles.Count -gt 0) {
     Assert-DocsLinks -RelativePaths $textFiles
 }
 Assert-VersionConsistency
+Assert-ReleaseMetadataConsistency
 Assert-ApacheLicenseText
 Assert-ReleaseConcludeAutomation
 
