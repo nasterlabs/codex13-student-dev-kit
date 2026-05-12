@@ -19,6 +19,11 @@ foreach ($dir in $scanDirs) {
     if (Test-Path -LiteralPath $dir -PathType Container) {
         $scripts = Get-ChildItem -LiteralPath $dir -Filter "*.ps1" -Recurse -File
         foreach ($script in $scripts) {
+            $text = Get-Content -LiteralPath $script.FullName -Raw
+            if ($text -match '[^\x00-\x7F]') {
+                throw "PowerShell scripts must stay ASCII-only to avoid BOM and encoding drift. Non-ASCII text found in $($script.FullName)."
+            }
+
             $results = Invoke-ScriptAnalyzer -Path $script.FullName -Settings $SettingsPath
             $allResults += $results
         }

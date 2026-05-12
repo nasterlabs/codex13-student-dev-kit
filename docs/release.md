@@ -85,16 +85,20 @@ task release:retry TAG=v0.7.0-alpha.2 SUPERSEDE_TAG=v0.7.0-alpha.1
 This creates `release/v0.7.0-alpha.2` from `origin/main`, updates versioned
 files, and moves the existing changelog section from the failed tag to the
 new tag. It does not add a second copy of the changelog entry, so the next
-published release reads as if the failed alpha was never released. The helper
-also prints commits that landed after the failed release-preparation commit so
-you can decide whether any release-process fix should be mentioned in the
-updated changelog entry.
+published release reads as if the failed alpha was never released.
+
+The helper also asks git-cliff for the changes that landed after the failed
+tag. When git-cliff finds follow-up changes, it inserts them into the moved
+changelog entry inside `BEGIN RELEASE RETRY FOLLOW-UP` markers so the manual
+editing step starts from generated text instead of a raw commit list. If
+git-cliff does not find a usable follow-up section, the helper falls back to
+printing the follow-up commits for manual review.
 
 After the retry branch is created:
 
 1. Review the updated changelog section.
-2. Add a short note for any release-process fix that materially changes the
-   published artifacts.
+2. Merge or rewrite any `BEGIN RELEASE RETRY FOLLOW-UP` block into the final
+   changelog prose.
 3. Remove any temporary edit markers that remain.
 4. Conclude and open the release PR:
 
