@@ -4,6 +4,9 @@ param(
 
     [string] $BaseBranch = "main",
 
+    [AllowEmptyString()]
+    [string] $NextVersion = "",
+
     [switch] $OpenPullRequest,
 
     [switch] $SkipChecks
@@ -34,9 +37,25 @@ function Resolve-ReleaseTag {
     return "v$candidate"
 }
 
+function Resolve-NextVersion {
+    param([AllowEmptyString()][string] $Value)
+
+    $candidate = $Value.Trim()
+    if ([string]::IsNullOrWhiteSpace($candidate)) {
+        return ""
+    }
+
+    if ($candidate -notmatch $semverTagPattern) {
+        throw "Next version must be valid SemVer, for example 0.7.1-alpha.0. Actual: $candidate"
+    }
+
+    return $candidate.TrimStart("v")
+}
+
 $normalizedTag = Resolve-ReleaseTag -Value $Tag
 $version = $normalizedTag.Substring(1)
 $versionCore = ($version -split '[-+]', 2)[0]
+$normalizedNextVersion = Resolve-NextVersion -Value $NextVersion
 $releaseBranch = "release/$normalizedTag"
 $commitSubject = "chore(release): prepare $normalizedTag"
 
@@ -134,7 +153,12 @@ if ($staged.Count -eq 0) {
     throw "No staged release changes to commit."
 }
 
-& git -C $Root commit -s -m $commitSubject
+if ([string]::IsNullOrWhiteSpace($normalizedNextVersion)) {
+    & git -C $Root commit -s -m $commitSubject
+}
+else {
+    & git -C $Root commit -s -m $commitSubject -m "Release-Next-Version: $normalizedNextVersion"
+}
 if ($LASTEXITCODE -ne 0) {
     throw "git commit failed."
 }
@@ -151,26 +175,37 @@ if ($OpenPullRequest) {
     $verificationIcon = [char]::ConvertFromUtf32(0x2705)
     $notesIcon = [char]::ConvertFromUtf32(0x1F4DD)
 
-    $pullRequestBody = @"
-## $summaryIcon Summary
+    $pullRequestBodyLines = New-Object System.Collections.Generic.List[string]
+    $pullRequestBodyLines.Add("## $summaryIcon Summary")
+    $pullRequestBodyLines.Add("")
+    $pullRequestBodyLines.Add("- prepare $normalizedTag release metadata")
+    $pullRequestBodyLines.Add("- update versioned release files")
+    $pullRequestBodyLines.Add("- add the edited changelog entry for $normalizedTag")
 
-- prepare $normalizedTag release metadata
-- update versioned release files
-- add the edited changelog entry for $normalizedTag
+    if (-not [string]::IsNullOrWhiteSpace($normalizedNextVersion)) {
+        $pullRequestBodyLines.Add("- request a post-release development bump to ``v$normalizedNextVersion``")
+    }
 
-## $verificationIcon Verification
+    $pullRequestBodyLines.Add("")
+    $pullRequestBodyLines.Add("## $verificationIcon Verification")
+    $pullRequestBodyLines.Add("")
+    $pullRequestBodyLines.Add('- [x] `task check`')
+    $pullRequestBodyLines.Add('- [x] `git diff --check`')
+    $pullRequestBodyLines.Add("- [ ] Manual installer smoke test when install, update or uninstall behavior changed")
+    $pullRequestBodyLines.Add("")
+    $pullRequestBodyLines.Add("## $notesIcon Notes")
+    $pullRequestBodyLines.Add("")
+    $pullRequestBodyLines.Add("- [x] Preserved UTF-8 encoding for NSIS files.")
+    $pullRequestBodyLines.Add('- [x] Did not commit downloaded archives, cache folders, payload logs, `.env`, `.build`, `dist`, `node_modules`, or native `bin`/`obj` output.')
+    $pullRequestBodyLines.Add("- [x] Updated documentation, release notes, changelog placeholders or workflow docs when needed.")
+    $pullRequestBodyLines.Add("- [x] Commits are signed off for DCO.")
 
-- [x] `task check`
-- [x] `git diff --check`
-- [ ] Manual installer smoke test when install, update or uninstall behavior changed
+    if (-not [string]::IsNullOrWhiteSpace($normalizedNextVersion)) {
+        $pullRequestBodyLines.Add("")
+        $pullRequestBodyLines.Add("Release-Next-Version: $normalizedNextVersion")
+    }
 
-## $notesIcon Notes
-
-- [x] Preserved UTF-8 encoding for NSIS files.
-- [x] Did not commit downloaded archives, cache folders, payload logs, `.env`, `.build`, `dist`, `node_modules`, or native `bin`/`obj` output.
-- [x] Updated documentation, release notes, changelog placeholders or workflow docs when needed.
-- [x] Commits are signed off for DCO.
-"@
+    $pullRequestBody = $pullRequestBodyLines -join "`n"
 
     & gh pr create `
         --base $BaseBranch `

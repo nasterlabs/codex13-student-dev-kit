@@ -66,6 +66,34 @@ jobs:
           RELEASE_BRANCH: ${{ github.event_name == 'workflow_dispatch' && inputs.release_branch || github.event.pull_request.head.ref }}
         run: node tools/scripts/check-release-state.cjs
 
+      - name: Resolve post-release next version
+        id: next-version
+        shell: pwsh
+        env:
+          PR_BODY: ${{ github.event_name == 'pull_request' && github.event.pull_request.body || '' }}
+        run: |
+          $semverPattern = '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-((0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$'
+          $nextVersion = ""
+          $match = [regex]::Match($env:PR_BODY, '(?m)^Release-Next-Version:\s*(?<version>\S+)\s*$')
+          if ($match.Success) {
+            $candidate = $match.Groups["version"].Value.Trim()
+            if ($candidate -notmatch $semverPattern) {
+              throw "Release-Next-Version must be valid SemVer, for example 0.7.1-alpha.0. Actual: $candidate"
+            }
+
+            $nextVersion = $candidate.TrimStart("v")
+          }
+
+          if ([string]::IsNullOrWhiteSpace($nextVersion)) {
+            "has_next_version=false" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            "next_version=" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            Write-Host "No post-release next version requested."
+          } else {
+            "has_next_version=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            "next_version=$nextVersion" | Add-Content -LiteralPath $env:GITHUB_OUTPUT -Encoding ASCII
+            Write-Host "Post-release next version requested: $nextVersion"
+          }
+
       - name: Wait for main checks
         if: ${{ github.event_name == 'pull_request' }}
         env:
@@ -94,6 +122,7 @@ jobs:
         shell: bash
         env:
           GH_APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          NEXT_VERSION: ${{ steps.next-version.outputs.next_version }}
         run: |
           set -euo pipefail
 
@@ -101,7 +130,12 @@ jobs:
           git config user.email "nasterlabs-release-bot[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
-          git tag -a "${{ steps.release.outputs.tag }}" -m "${{ steps.release.outputs.tag }}"
+          tag_args=(-a "${{ steps.release.outputs.tag }}" -m "${{ steps.release.outputs.tag }}")
+          if [[ -n "${NEXT_VERSION}" ]]; then
+            tag_args+=(-m "Release-Next-Version: ${NEXT_VERSION}")
+          fi
+
+          git tag "${tag_args[@]}"
           git push origin "${{ steps.release.outputs.tag }}"
 
       - name: Dry-run summary

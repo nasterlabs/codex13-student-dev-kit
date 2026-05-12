@@ -73,14 +73,25 @@ tasks:
       - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/prepare-release.ps1 -Tag "{{.TAG}}" -SupersedeTag "{{.SUPERSEDE_TAG}}"
 
   release:conclude:
-    desc: Validate edited release notes, run checks, commit release prep and optionally open a PR; pass TAG=v0.7.0-alpha.1 OPEN_PR=1 or omit TAG for prompt
+    desc: Validate edited release notes, run checks, commit release prep and optionally open a PR; pass TAG=v0.7.0-alpha.1 NEXT_VERSION=0.7.1-alpha.0 OPEN_PR=1 or omit TAG for prompt
     platforms: [windows]
     vars:
       TAG: '{{.TAG | default ""}}'
+      NEXT_VERSION: '{{.NEXT_VERSION | default ""}}'
       OPEN_PR: '{{.OPEN_PR | default "0"}}'
       SKIP_CHECKS: '{{.SKIP_CHECKS | default "0"}}'
     cmds:
-      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/conclude-release.ps1 -Tag "{{.TAG}}" {{if eq .OPEN_PR "1"}}-OpenPullRequest{{end}} {{if eq .SKIP_CHECKS "1"}}-SkipChecks{{end}}
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/conclude-release.ps1 -Tag "{{.TAG}}" {{if ne .NEXT_VERSION ""}}-NextVersion "{{.NEXT_VERSION}}"{{end}} {{if eq .OPEN_PR "1"}}-OpenPullRequest{{end}} {{if eq .SKIP_CHECKS "1"}}-SkipChecks{{end}}
+
+  release:bump-next:
+    desc: Start the next development version after a successful release; pass NEXT_VERSION=0.7.1-alpha.0 and optionally OPEN_PR=1
+    platforms: [windows]
+    vars:
+      NEXT_VERSION: '{{.NEXT_VERSION | default ""}}'
+      OPEN_PR: '{{.OPEN_PR | default "0"}}'
+      SKIP_CHECKS: '{{.SKIP_CHECKS | default "0"}}'
+    cmds:
+      - pwsh -NoProfile -ExecutionPolicy Bypass -File ./tools/scripts/bump-next-version.ps1 -NextVersion "{{.NEXT_VERSION}}" {{if eq .OPEN_PR "1"}}-OpenPullRequest{{end}} {{if eq .SKIP_CHECKS "1"}}-SkipChecks{{end}}
 
   release:check-state:
     desc: Validate release branch state without creating a tag; pass RELEASE_BRANCH=release/v0.7.0-alpha.1

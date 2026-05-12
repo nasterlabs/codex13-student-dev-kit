@@ -230,8 +230,8 @@ Install the app on this repository and grant these repository permissions:
 
 | Permission | Access | Used by |
 | --- | --- | --- |
-| `Contents` | Read and write | Creating release tags and updating PR branches. |
-| `Pull requests` | Read and write | Calling GitHub's PR branch update API. |
+| `Contents` | Read and write | Creating release tags, updating PR branches, and opening post-release version bump branches. |
+| `Pull requests` | Read and write | Calling GitHub's PR branch update API and opening post-release version bump pull requests. |
 
 `Metadata: Read-only` is always included by GitHub App installations. No
 organization-wide installation is required; repository-only installation is
@@ -244,6 +244,11 @@ for the repository. Until the installation accepts the new permissions,
 ```text
 The permissions requested are not granted to this installation.
 ```
+
+The repository DCO/signature check has a narrow trusted-automation exception for
+`nasterlabs-release-bot[bot]` commits created by this app during release
+automation. Human-authored commits are still expected to carry DCO sign-off and
+verified signatures.
 
 ## Automated Pull Request Updates
 

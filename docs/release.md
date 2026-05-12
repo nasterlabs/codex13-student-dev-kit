@@ -62,13 +62,49 @@ After that:
    task release:conclude TAG=v0.7.0-alpha.1 OPEN_PR=1
    ```
 
+   When a release closes a version line and `main` should move to the next
+   development version after the GitHub Release is published, include
+   `NEXT_VERSION`:
+
+   ```powershell
+   task release:conclude TAG=v0.7.0-alpha.4 NEXT_VERSION=0.7.1-alpha.0 OPEN_PR=1
+   ```
+
 `release:conclude` validates `package.json`, `APP_VERSION`, release metadata,
 and the changelog markers, runs repository checks, then commits the branch as
-`chore(release): prepare v<semver>`.
+`chore(release): prepare v<semver>`. When `NEXT_VERSION` is set, it records a
+`Release-Next-Version` trailer in the release commit and pull request body. The
+tagging workflow copies that value into the annotated release tag.
 
 The release workflow validates this before the expensive release build job. If
 the version core does not match `APP_VERSION`, the run fails in
 `Pre-release checks` and links back to this section.
+
+## Post-release Development Version
+
+After a successful tag release, the release workflow checks the annotated tag
+message for a `Release-Next-Version` trailer. If present, it opens a separate
+pull request that starts the next development version:
+
+```text
+Release-Next-Version: 0.7.1-alpha.0
+```
+
+The follow-up pull request is intentionally separate from the release PR. It
+updates `package.json`, Setup `APP_VERSION`, release metadata, and current-line
+documentation, then lets normal branch protection and CI validate the change.
+
+The same bump can be prepared manually when needed:
+
+```powershell
+task release:bump-next NEXT_VERSION=0.7.1-alpha.0
+```
+
+Add `OPEN_PR=1` to have the helper commit, push and open the PR:
+
+```powershell
+task release:bump-next NEXT_VERSION=0.7.1-alpha.0 OPEN_PR=1
+```
 
 ## Failed Alpha Release Recovery
 
