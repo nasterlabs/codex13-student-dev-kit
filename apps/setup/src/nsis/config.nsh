@@ -7,7 +7,7 @@
 !define APP_REGISTRY_KEY "Codex13SDK"
 !define APP_SETTINGS_REG_KEY "Software\NasterLabs\Codex13SDK"
 !define APP_START_MENU_FOLDER "Codex 13 Student Dev Kit"
-!define APP_VERSION "0.7.0"
+!define APP_VERSION "0.7.1"
 !ifndef APP_VERSION_QUAD
 !define APP_VERSION_QUAD "${APP_VERSION}.0"
 !endif

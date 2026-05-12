@@ -105,7 +105,7 @@ Setup is portable-first, not trace-free. It installs the tool payload under the 
 
 ## Status
 
-Current release line: `0.7.0-alpha.<build_number>` · [Product page](https://codex13.dev/student-dev-kit)
+Current release line: `0.7.1-alpha.<build_number>` · [Product page](https://codex13.dev/student-dev-kit)
 
 The first public alpha builds are intended to be stable enough for release validation, but they also validate the public release pipeline itself. Until Authenticode signing for the EXE is resolved, public releases stay on the alpha line.
 

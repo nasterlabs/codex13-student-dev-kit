@@ -57,7 +57,7 @@ setting `BUILD_ENV_FILE`.
 
 `BUILD_VERSION` is optional. If it is set, its `major.minor.patch` core must
 match `APP_VERSION` from `apps/setup/src/nsis/config.nsh`; for the first public alpha
-line use values like `0.7.0-alpha.<build_number>`.
+line use values like `0.7.1-alpha.<build_number>`.
 
 **CI** — set env vars directly in the CI environment (no file needed). Variables
 already in the process environment take precedence over any env file.
