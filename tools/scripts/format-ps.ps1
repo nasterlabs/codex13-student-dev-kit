@@ -31,6 +31,7 @@ foreach ($dir in $scanDirs) {
 
 if ($formattedCount -gt 0) {
     Write-Host "Formatted $formattedCount file(s)."
-} else {
+}
+else {
     Write-Host "All PowerShell files are already consistently formatted."
 }
