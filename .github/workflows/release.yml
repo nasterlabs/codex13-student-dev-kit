@@ -157,7 +157,7 @@ jobs:
 
       - name: Install Task
         if: ${{ steps.detect-act.outputs.is_act != 'true' }}
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
         with:
           repo-token: ${{ github.token }}
 
@@ -210,7 +210,7 @@ jobs:
 
       - name: Install Task
         if: ${{ steps.detect-act.outputs.is_act != 'true' }}
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
         with:
           repo-token: ${{ github.token }}
 
@@ -506,7 +506,7 @@ jobs:
     steps:
       - name: Create GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.2.0
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -521,7 +521,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Task
-        uses: go-task/setup-task@3be4020d41929789a01026e0e427a4321ce0ad44 # v2.0.0
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
         with:
           repo-token: ${{ github.token }}
 
